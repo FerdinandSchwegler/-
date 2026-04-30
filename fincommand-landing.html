@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinCommand — AI Financial Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080a0e;
+    --deep: #0c0f14;
+    --surface: #111520;
+    --surface2: #161b25;
+    --surface3: #1c2230;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --gold: #c9a84c;
+    --gold-dim: rgba(201,168,76,0.15);
+    --gold-glow: rgba(201,168,76,0.06);
+    --silver: #d4dae8;
+    --silver-dim: rgba(212,218,232,0.55);
+    --silver-faint: rgba(212,218,232,0.25);
+    --teal: #3ecfb2;
+    --teal-dim: rgba(62,207,178,0.12);
+    --red-loss: #e05c5c;
+    --green-gain: #4bcf8e;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--silver);
+    font-family: var(--font-body);
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--deep); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid var(--border);
+    background: rgba(8,10,14,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-logo span {
+    color: var(--gold);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--silver-dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 400;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--silver); }
+
+  .nav-cta {
+    background: var(--gold);
+    color: var(--black);
+    padding: 0.6rem 1.4rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(62,207,178,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--gold-dim);
+    border: 0.5px solid rgba(201,168,76,0.3);
+    padding: 0.4rem 1rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.8s ease both;
+  }
+
+  .dot-pulse {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 7vw, 6.5rem);
+    font-weight: 300;
+    line-height: 1.05;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    max-width: 900px;
+    animation: fadeInUp 0.9s ease 0.1s both;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--silver-dim);
+    max-width: 560px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    font-weight: 300;
+    animation: fadeInUp 0.9s ease 0.2s both;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 5rem;
+    animation: fadeInUp 0.9s ease 0.3s both;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 0.9rem 2.2rem;
+    border-radius: 2px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: #e0b95a;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(201,168,76,0.25);
+  }
+
+  .btn-secondary {
+    color: var(--silver-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+    padding: 0.9rem 1.2rem;
+    border: 0.5px solid var(--border2);
+    border-radius: 2px;
+  }
+
+  .btn-secondary:hover { color: var(--silver); border-color: rgba(255,255,255,0.25); }
+
+  /* ─── DASHBOARD PREVIEW ─── */
+  .hero-dashboard {
+    width: 100%;
+    max-width: 1000px;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    animation: fadeInUp 1s ease 0.4s both;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 0.5px var(--border);
+  }
+
+  .dashboard-topbar {
+    background: var(--surface2);
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .traffic-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .dashboard-body {
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .dash-metric {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+  }
+
+  .dash-metric-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--silver-faint);
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+  }
+
+  .dash-metric-value {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .dash-metric-delta {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    margin-top: 0.3rem;
+  }
+
+  .delta-up { color: var(--green-gain); }
+  .delta-down { color: var(--red-loss); }
+
+  .dash-chart-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+  }
+
+  .dash-chart-box {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    min-height: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dash-chart-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--silver-faint);
+    font-family: var(--font-mono);
+    margin-bottom: 0.8rem;
+  }
+
+  .sparkline {
+    width: 100%;
+    height: 60px;
+  }
+
+  .ai-insight {
+    font-size: 0.72rem;
+    color: var(--silver-dim);
+    line-height: 1.6;
+  }
+
+  .ai-badge {
+    display: inline-block;
+    background: var(--teal-dim);
+    color: var(--teal);
+    font-size: 0.55rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+  }
+
+  .dashboard-fade {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--black));
+    pointer-events: none;
+  }
+
+  /* ─── SECTIONS ─── */
+  section { position: relative; z-index: 1; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  /* ─── METRICS TICKER ─── */
+  .metrics-bar {
+    background: var(--surface);
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    padding: 1.2rem 0;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 4rem;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    flex-shrink: 0;
+  }
+
+  .ticker-label { color: var(--silver-faint); letter-spacing: 0.1em; }
+  .ticker-value { color: #fff; font-weight: 400; }
+  .ticker-change { color: var(--green-gain); }
+  .ticker-sep { color: var(--border2); }
+
+  /* ─── PROBLEM ─── */
+  .problem-section {
+    padding: 8rem 0;
+    background: var(--deep);
+  }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+    margin-top: 4rem;
+  }
+
+  .problem-text h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+
+  .problem-text p {
+    color: var(--silver-dim);
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .pain-list {
+    list-style: none;
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .pain-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--silver-dim);
+    line-height: 1.6;
+  }
+
+  .pain-icon {
+    width: 18px;
+    height: 18px;
+    background: rgba(224,92,92,0.15);
+    border: 0.5px solid rgba(224,92,92,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .pain-icon::after {
+    content: '×';
+    color: var(--red-loss);
+    font-size: 0.75rem;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  .problem-visual {
+    position: relative;
+  }
+
+  .chaos-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    position: relative;
+  }
+
+  .chaos-header {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--silver-faint);
+    margin-bottom: 1.2rem;
+  }
+
+  .chaos-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 0.8rem;
+  }
+
+  .chaos-row:last-child { border-bottom: none; }
+  .chaos-name { color: var(--silver-dim); }
+  .chaos-amount { font-family: var(--font-mono); font-size: 0.75rem; }
+  .amount-red { color: var(--red-loss); }
+  .amount-yellow { color: #e0a040; }
+
+  .alert-badge {
+    position: absolute;
+    top: -12px;
+    right: 1.5rem;
+    background: rgba(224,92,92,0.9);
+    color: #fff;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+  }
+
+  /* ─── SOLUTION ─── */
+  .solution-section {
+    padding: 8rem 0;
+    background: var(--black);
+  }
+
+  .solution-header {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto 5rem;
+  }
+
+  .solution-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  .solution-header p {
+    color: var(--silver-dim);
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .module-card {
+    background: var(--surface);
+    padding: 2rem 1.5rem;
+    position: relative;
+    transition: background 0.3s;
+    cursor: default;
+  }
+
+  .module-card:hover {
+    background: var(--surface2);
+  }
+
+  .module-number {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--silver-faint);
+    letter-spacing: 0.12em;
+    margin-bottom: 1.2rem;
+  }
+
+  .module-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+
+  .module-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 0.6rem;
+    line-height: 1.3;
+  }
+
+  .module-desc {
+    font-size: 0.75rem;
+    color: var(--silver-faint);
+    line-height: 1.7;
+  }
+
+  .module-tag {
+    display: inline-block;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+  }
+
+  /* ─── SOCIAL PROOF ─── */
+  .proof-section {
+    padding: 8rem 0;
+    background: var(--deep);
+    overflow: hidden;
+  }
+
+  .proof-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .proof-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 5rem;
+  }
+
+  .metric-item {
+    background: var(--surface);
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+
+  .metric-num {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-desc {
+    font-size: 0.78rem;
+    color: var(--silver-dim);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .testimonial {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .testimonial::before {
+    content: '"';
+    font-family: var(--font-display);
+    font-size: 4rem;
+    color: var(--gold);
+    opacity: 0.3;
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    line-height: 1;
+  }
+
+  .testimonial-text {
+    font-size: 0.85rem;
+    color: var(--silver-dim);
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .author-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+
+  .author-name {
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 400;
+  }
+
+  .author-role {
+    font-size: 0.7rem;
+    color: var(--silver-faint);
+    font-family: var(--font-mono);
+  }
+
+  .highlight-result {
+    display: inline-block;
+    background: var(--gold-dim);
+    border: 0.5px solid rgba(201,168,76,0.25);
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    margin-bottom: 0.8rem;
+  }
+
+  /* ─── DEMO ─── */
+  .demo-section {
+    padding: 8rem 0;
+    background: var(--black);
+  }
+
+  .demo-inner {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .demo-copy h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.2rem;
+  }
+
+  .demo-copy p {
+    color: var(--silver-dim);
+    font-size: 0.9rem;
+    line-height: 1.85;
+    margin-bottom: 2rem;
+  }
+
+  .feature-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.82rem;
+    color: var(--silver-dim);
+  }
+
+  .check {
+    width: 16px;
+    height: 16px;
+    background: var(--teal-dim);
+    border: 0.5px solid rgba(62,207,178,0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    color: var(--teal);
+  }
+
+  .demo-screen {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  }
+
+  .demo-topbar {
+    background: var(--surface2);
+    padding: 0.7rem 1rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .demo-tabs {
+    display: flex;
+    gap: 0;
+  }
+
+  .demo-tab {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.8rem;
+    border: 0.5px solid var(--border);
+    color: var(--silver-faint);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .demo-tab:first-child { border-radius: 3px 0 0 3px; }
+  .demo-tab:last-child { border-radius: 0 3px 3px 0; border-left: none; }
+
+  .demo-tab.active {
+    background: var(--gold-dim);
+    border-color: rgba(201,168,76,0.3);
+    color: var(--gold);
+  }
+
+  .demo-content {
+    padding: 1.2rem;
+  }
+
+  .demo-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .demo-card {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 4px;
+    padding: 0.9rem;
+  }
+
+  .demo-card-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--silver-faint);
+    margin-bottom: 0.4rem;
+  }
+
+  .demo-card-val {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .demo-card-sub {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    margin-top: 0.2rem;
+  }
+
+  .demo-ai-box {
+    background: var(--surface2);
+    border: 0.5px solid rgba(62,207,178,0.2);
+    border-left: 2px solid var(--teal);
+    border-radius: 4px;
+    padding: 0.9rem;
+    margin-top: 0.8rem;
+  }
+
+  .demo-ai-header {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--teal);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .demo-ai-text {
+    font-size: 0.75rem;
+    color: var(--silver-dim);
+    line-height: 1.65;
+  }
+
+  .demo-bar-row {
+    margin-top: 0.8rem;
+  }
+
+  .bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+  }
+
+  .bar-label {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--silver-faint);
+  }
+
+  .bar-track {
+    background: var(--surface3);
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  /* ─── PRICING ─── */
+  .pricing-section {
+    padding: 8rem 0;
+    background: var(--deep);
+  }
+
+  .pricing-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .pricing-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.8rem;
+  }
+
+  .pricing-header p {
+    color: var(--silver-dim);
+    font-size: 0.9rem;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .pricing-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: border-color 0.3s;
+  }
+
+  .pricing-card:hover {
+    border-color: var(--border2);
+  }
+
+  .pricing-card.featured {
+    background: var(--surface2);
+    border-color: rgba(201,168,76,0.3);
+    border-width: 0.5px;
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--black);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .plan-name {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--silver-dim);
+    margin-bottom: 1rem;
+  }
+
+  .plan-price {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .plan-price sup {
+    font-size: 1.2rem;
+    vertical-align: top;
+    margin-top: 0.5rem;
+    color: var(--silver-dim);
+  }
+
+  .plan-price .per {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--silver-faint);
+  }
+
+  .plan-desc {
+    font-size: 0.78rem;
+    color: var(--silver-faint);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .plan-features {
+    list-style: none;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.8rem;
+    color: var(--silver-dim);
+  }
+
+  .plan-features li::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .plan-cta {
+    display: block;
+    text-align: center;
+    padding: 0.85rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .plan-cta-outline {
+    border: 0.5px solid var(--border2);
+    color: var(--silver-dim);
+  }
+
+  .plan-cta-outline:hover {
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+  }
+
+  .plan-cta-gold {
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+  }
+
+  .plan-cta-gold:hover {
+    background: #e0b95a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(201,168,76,0.25);
+  }
+
+  .plan-divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* ─── FINAL CTA ─── */
+  .cta-section {
+    padding: 10rem 0;
+    background: var(--black);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cta-section p {
+    color: var(--silver-dim);
+    font-size: 1rem;
+    max-width: 440px;
+    margin: 0 auto 3rem;
+    line-height: 1.8;
+  }
+
+  .cta-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .cta-note {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--silver-faint);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--deep);
+    border-top: 0.5px solid var(--border);
+    padding: 3rem 0 2rem;
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+  }
+
+  .footer-brand .nav-logo {
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.8rem;
+    color: var(--silver-faint);
+    line-height: 1.7;
+    max-width: 260px;
+  }
+
+  .footer-col-title {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--silver-faint);
+    margin-bottom: 1rem;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .footer-links a {
+    font-size: 0.8rem;
+    color: var(--silver-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: #fff; }
+
+  .footer-bottom {
+    border-top: 0.5px solid var(--border);
+    padding-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-copy {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--silver-faint);
+    letter-spacing: 0.06em;
+  }
+
+  .footer-legal {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .footer-legal a {
+    font-size: 0.65rem;
+    color: var(--silver-faint);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+    transition: color 0.2s;
+  }
+
+  .footer-legal a:hover { color: var(--silver-dim); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── SECTION DIVIDERS ─── */
+  .divider-line {
+    height: 0.5px;
+    background: var(--border);
+    width: 100%;
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .problem-grid, .demo-inner { grid-template-columns: 1fr; gap: 3rem; }
+    .modules-grid { grid-template-columns: 1fr 1fr; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .footer-inner { grid-template-columns: 1fr 1fr; }
+    .dashboard-body { grid-template-columns: 1fr 1fr; }
+    .dash-chart-row { grid-column: auto; grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 2.4rem; }
+    .hero-ctas { flex-direction: column; width: 100%; }
+    .btn-primary, .btn-secondary { width: 100%; text-align: center; justify-content: center; }
+    .modules-grid { grid-template-columns: 1fr; }
+    .metrics-row { grid-template-columns: 1fr 1fr; }
+    .demo-row { grid-template-columns: 1fr; }
+    .cta-btns { flex-direction: column; }
+    .footer-inner { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Fin<span>Command</span></a>
+  <ul class="nav-links">
+    <li><a href="#solution">Platform</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#proof">Results</a></li>
+  </ul>
+  <a href="#pricing" class="nav-cta">Start Free</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+
+  <div class="hero-eyebrow">
+    <span class="dot-pulse"></span>
+    AI-Powered Financial Intelligence
+  </div>
+
+  <h1>Control Your Money.<br><em>Scale Your Business.</em></h1>
+
+  <p class="hero-sub">
+    The AI financial command center built for entrepreneurs.
+    Optimize taxes, eliminate cashflow chaos, and unlock growth —
+    all from one intelligent dashboard.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="#pricing" class="btn-primary">Get Financial Clarity — Free</a>
+    <a href="#demo" class="btn-secondary">
+      See the platform
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 4l3.5 3-3.5 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+
+  <!-- Dashboard Preview -->
+  <div class="hero-dashboard">
+    <div class="dashboard-topbar">
+      <div class="traffic-dot" style="background:#e05c5c;"></div>
+      <div class="traffic-dot" style="background:#e0a040;margin-left:4px;"></div>
+      <div class="traffic-dot" style="background:#4bcf8e;margin-left:4px;"></div>
+      <span style="margin-left:1rem; font-family:var(--font-mono); font-size:0.62rem; color:var(--silver-faint); letter-spacing:0.08em;">fincommand.io/dashboard</span>
+      <span style="margin-left:auto; font-family:var(--font-mono); font-size:0.6rem; color:var(--teal); letter-spacing:0.08em;">● AI Active</span>
+    </div>
+    <div class="dashboard-body">
+      <div class="dash-metric">
+        <div class="dash-metric-label">Net Revenue</div>
+        <div class="dash-metric-value">€84.2K</div>
+        <div class="dash-metric-delta delta-up">↑ +18.4% vs last month</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Tax Saved (YTD)</div>
+        <div class="dash-metric-value">€12.8K</div>
+        <div class="dash-metric-delta delta-up">↑ +€3.2K this quarter</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Profit Margin</div>
+        <div class="dash-metric-value">38.1%</div>
+        <div class="dash-metric-delta delta-up">↑ +6.2% optimized</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Runway</div>
+        <div class="dash-metric-value">14mo</div>
+        <div class="dash-metric-delta" style="color:var(--silver-faint);">● Healthy</div>
+      </div>
+
+      <div class="dash-chart-row">
+        <div class="dash-chart-box">
+          <div class="dash-chart-title">Cashflow Forecast — 6 months</div>
+          <svg class="sparkline" viewBox="0 0 500 60" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4bcf8e" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#4bcf8e" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 50 L80 42 L160 35 L240 28 L320 20 L400 14 L500 8 L500 60 L0 60Z" fill="url(#cashGrad)"/>
+            <path d="M0 50 L80 42 L160 35 L240 28 L320 20 L400 14 L500 8" stroke="#4bcf8e" stroke-width="1.5" fill="none"/>
+            <!-- Projection line dashes -->
+            <path d="M320 20 L400 14 L500 8" stroke="#4bcf8e" stroke-width="1" stroke-dasharray="4 3" fill="none" opacity="0.5"/>
+            <circle cx="320" cy="20" r="3" fill="#4bcf8e"/>
+            <text x="322" y="16" font-family="DM Mono" font-size="7" fill="#4bcf8e" opacity="0.7">Now</text>
+          </svg>
+        </div>
+        <div class="dash-chart-box">
+          <div class="ai-badge">AI Insight</div>
+          <div class="ai-insight">
+            You're overpaying VAT by an estimated <span style="color:#c9a84c;">€1,840/mo</span>. Restructuring your contractor invoicing to quarterly could save <strong style="color:#fff;">€7,200 annually</strong>. Review now →
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-fade"></div>
+  </div>
+</section>
+
+<!-- METRICS TICKER -->
+<div class="metrics-bar">
+  <div class="ticker-track">
+    <!-- First set -->
+    <div class="ticker-item"><span class="ticker-label">Avg Tax Saved</span><span class="ticker-value">€18,400/yr</span><span class="ticker-change">↑+31%</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Avg Revenue Increase</span><span class="ticker-value">+€42K</span><span class="ticker-change">↑+28%</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Businesses Optimized</span><span class="ticker-value">4,200+</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Avg Profit Margin Gain</span><span class="ticker-value">+12.4pp</span><span class="ticker-change">↑First 90 days</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">NPS Score</span><span class="ticker-value">78</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Setup Time</span><span class="ticker-value">< 5 min</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <!-- Duplicate for seamless loop -->
+    <div class="ticker-item"><span class="ticker-label">Avg Tax Saved</span><span class="ticker-value">€18,400/yr</span><span class="ticker-change">↑+31%</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Avg Revenue Increase</span><span class="ticker-value">+€42K</span><span class="ticker-change">↑+28%</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Businesses Optimized</span><span class="ticker-value">4,200+</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Avg Profit Margin Gain</span><span class="ticker-value">+12.4pp</span><span class="ticker-change">↑First 90 days</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">NPS Score</span><span class="ticker-value">78</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+    <div class="ticker-item"><span class="ticker-label">Setup Time</span><span class="ticker-value">< 5 min</span></div>
+    <div class="ticker-item ticker-sep">·</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem-section" id="problem">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <div class="problem-grid">
+      <div class="problem-text reveal">
+        <h2>Your business earns more than you keep.</h2>
+        <p>
+          Most entrepreneurs are flying blind — overpaying taxes by 20–35%, leaking profit through invisible inefficiencies, and making growth decisions based on gut feel instead of data.
+        </p>
+        <ul class="pain-list">
+          <li><span class="pain-icon"></span> Overpaying taxes — no structure, no strategy</li>
+          <li><span class="pain-icon"></span> Cashflow surprises threatening your runway</li>
+          <li><span class="pain-icon"></span> Profit leaks you can't see, let alone fix</li>
+          <li><span class="pain-icon"></span> No clear signal on when or how to scale</li>
+          <li><span class="pain-icon"></span> Capital sitting idle instead of compounding</li>
+        </ul>
+      </div>
+      <div class="problem-visual reveal">
+        <div class="chaos-card">
+          <div class="alert-badge">⚠ 4 Issues Detected</div>
+          <div class="chaos-header">Without FinCommand — Current State</div>
+          <div class="chaos-row">
+            <span class="chaos-name">Q3 Tax Liability (est.)</span>
+            <span class="chaos-amount amount-red">€24,800</span>
+          </div>
+          <div class="chaos-row">
+            <span class="chaos-name">Unnecessary SaaS spend</span>
+            <span class="chaos-amount amount-red">€1,240/mo</span>
+          </div>
+          <div class="chaos-row">
+            <span class="chaos-name">Unoptimized contractor costs</span>
+            <span class="chaos-amount amount-yellow">€3,600/mo</span>
+          </div>
+          <div class="chaos-row">
+            <span class="chaos-name">Idle capital (no ROI)</span>
+            <span class="chaos-amount amount-yellow">€18,000</span>
+          </div>
+          <div class="chaos-row">
+            <span class="chaos-name">Total avoidable losses/year</span>
+            <span class="chaos-amount amount-red" style="font-size:0.9rem; font-weight:500;">€62,880</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="solution-section" id="solution">
+  <div class="container">
+    <div class="solution-header reveal">
+      <div class="section-label">The Platform</div>
+      <h2>Five AI engines.<br>One command center.</h2>
+      <p>FinCommand integrates five specialized AI modules that work together in real-time — analyzing your data, surfacing decisions, and executing strategies that compound over time.</p>
+    </div>
+
+    <div class="modules-grid reveal">
+      <!-- Module 1 -->
+      <div class="module-card">
+        <div class="module-number">01</div>
+        <div class="module-icon" style="background:rgba(62,207,178,0.1); color:var(--teal);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14 L5 9 L8 11 L11 6 L14 8 L16 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="module-title">AI Budget Planner</div>
+        <div class="module-desc">Predictive cashflow modeling and burn rate analysis with 90-day accuracy.</div>
+        <div class="module-tag" style="background:var(--teal-dim); color:var(--teal);">Predictive</div>
+      </div>
+
+      <!-- Module 2 -->
+      <div class="module-card">
+        <div class="module-number">02</div>
+        <div class="module-icon" style="background:var(--gold-dim); color:var(--gold);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="3" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="7.5" y="5" width="3" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="12" y="2" width="3" height="13" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+        </div>
+        <div class="module-title">Tax Optimizer</div>
+        <div class="module-desc">Legal tax reduction strategies. Country-aware, updated quarterly.</div>
+        <div class="module-tag" style="background:var(--gold-dim); color:var(--gold);">Saves Most</div>
+      </div>
+
+      <!-- Module 3 -->
+      <div class="module-card">
+        <div class="module-number">03</div>
+        <div class="module-icon" style="background:rgba(212,218,232,0.08); color:var(--silver);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 6v3l2.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="module-title">Business Optimizer</div>
+        <div class="module-desc">Identifies profit leaks and cost inefficiencies across your entire operation.</div>
+        <div class="module-tag" style="background:rgba(212,218,232,0.06); color:var(--silver-dim);">Intelligence</div>
+      </div>
+
+      <!-- Module 4 -->
+      <div class="module-card">
+        <div class="module-number">04</div>
+        <div class="module-icon" style="background:rgba(75,207,142,0.1); color:var(--green-gain);">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 3 L15 9 M15 9 L9 15 M15 9 H3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="module-title">Scaling Advisor</div>
+        <div class="module-desc">Data-driven growth playbooks tailored to your revenue stage and market.</div>
+        <div class="module-tag" style="background:rgba(75,207,142,0.1); color:var(--green-gain);">Growth</div>
+      </div>
+
+      <!-- Module 5 -->
+      <div class="module-card">
+        <div class="module-number">05</div>
+        <div class="module-icon" style="background:rgba(224,160,64,0.12); color:#e0a040;">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M9 5.5V9l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M6 3.5 C4 5 3 7 3 9" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5"/></svg>
+        </div>
+        <div class="module-title">Investment Intelligence</div>
+        <div class="module-desc">Reinvest capital optimally. ROI modeling across instruments and timing.</div>
+        <div class="module-tag" style="background:rgba(224,160,64,0.1); color:#e0a040;">Compounding</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof-section" id="proof">
+  <div class="container">
+    <div class="proof-header reveal">
+      <div class="section-label">Proven Results</div>
+      <h2>Numbers that speak for themselves.</h2>
+    </div>
+
+    <div class="metrics-row reveal">
+      <div class="metric-item">
+        <div class="metric-num">+32%</div>
+        <div class="metric-desc">Average profit increase<br>in first 90 days</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num">€18K</div>
+        <div class="metric-desc">Average annual<br>tax savings per business</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num">4,200+</div>
+        <div class="metric-desc">Entrepreneurs and<br>founders on the platform</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num">8 min</div>
+        <div class="metric-desc">Average time to first<br>AI financial insight</div>
+      </div>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="testimonial reveal">
+        <div class="highlight-result">+€22K tax saved in year 1</div>
+        <div class="testimonial-text">
+          I was leaving enormous money on the table with my tax setup. FinCommand flagged a legal restructuring I'd never considered — my accountant confirmed it and we saved €22K in the first year alone.
+        </div>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:rgba(62,207,178,0.12); color:var(--teal);">MH</div>
+          <div>
+            <div class="author-name">Marcus H.</div>
+            <div class="author-role">Founder, SaaS — €280K/mo ARR</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial reveal">
+        <div class="highlight-result">Cashflow clarity in week 1</div>
+        <div class="testimonial-text">
+          I had no idea how close to the edge we were operating until FinCommand modeled our next six months. We made three strategic pivots that turned a potential crisis into our best quarter ever.
+        </div>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:rgba(201,168,76,0.12); color:var(--gold);">SA</div>
+          <div>
+            <div class="author-name">Sophia A.</div>
+            <div class="author-role">CEO, Agency — €85K/mo revenue</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial reveal">
+        <div class="highlight-result">+38% profit margin improvement</div>
+        <div class="testimonial-text">
+          The Business Optimizer identified €4,200 in monthly waste I was completely blind to — redundant tools, underperforming hires, inefficient workflows. It paid for itself in the first week.
+        </div>
+        <div class="testimonial-author">
+          <div class="author-avatar" style="background:rgba(75,207,142,0.12); color:var(--green-gain);">DL</div>
+          <div>
+            <div class="author-name">Daniel L.</div>
+            <div class="author-role">Freelancer turned Studio — €40K/mo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="demo-inner">
+      <div class="demo-copy reveal">
+        <div class="section-label">The Dashboard</div>
+        <h2>Your entire financial reality in one view.</h2>
+        <p>
+          Connect your accounts in minutes. FinCommand analyzes your full financial picture and surfaces actionable intelligence — not just charts.
+        </p>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Real-time P&L with AI anomaly detection</li>
+          <li><span class="check">✓</span> Tax liability forecasting by quarter</li>
+          <li><span class="check">✓</span> Profitability by client, product, or channel</li>
+          <li><span class="check">✓</span> Automated alerts for cashflow risks</li>
+          <li><span class="check">✓</span> 1-click action on every AI recommendation</li>
+          <li><span class="check">✓</span> Integrates with Stripe, Xero, QuickBooks, Revolut</li>
+        </ul>
+      </div>
+
+      <div class="demo-screen reveal">
+        <div class="demo-topbar">
+          <div class="demo-tabs">
+            <div class="demo-tab active">Overview</div>
+            <div class="demo-tab">Tax</div>
+            <div class="demo-tab">Scale</div>
+          </div>
+          <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--silver-faint);">Oct 2024</span>
+        </div>
+        <div class="demo-content">
+          <div class="demo-row">
+            <div class="demo-card">
+              <div class="demo-card-label">Monthly Revenue</div>
+              <div class="demo-card-val">€124,800</div>
+              <div class="demo-card-sub delta-up">↑ +14.2%</div>
+            </div>
+            <div class="demo-card">
+              <div class="demo-card-label">Net Profit</div>
+              <div class="demo-card-val">€47,600</div>
+              <div class="demo-card-sub delta-up">↑ Margin 38.1%</div>
+            </div>
+          </div>
+
+          <div class="demo-bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">Revenue</span>
+              <span class="bar-label" style="color:#4bcf8e;">€124,800</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:88%; background:#4bcf8e;"></div></div>
+            <div class="bar-label-row">
+              <span class="bar-label">Operating Costs</span>
+              <span class="bar-label" style="color:#e05c5c;">€62,400</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:50%; background:#e05c5c;"></div></div>
+            <div class="bar-label-row">
+              <span class="bar-label">Tax Provision</span>
+              <span class="bar-label" style="color:#c9a84c;">€14,800</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:22%; background:#c9a84c;"></div></div>
+          </div>
+
+          <div class="demo-ai-box">
+            <div class="demo-ai-header">⚡ AI Recommendation</div>
+            <div class="demo-ai-text">
+              Your R&D spending qualifies for a 25% tax credit under current EU rules — estimated <span style="color:#c9a84c; font-weight:500;">€3,200 reduction</span> this quarter. Review classification now →
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="container">
+    <div class="pricing-header reveal">
+      <div class="section-label">Simple Pricing</div>
+      <h2>Start free. Scale when ready.</h2>
+      <p>No setup fees. No hidden costs. Most users recoup the annual cost in their first tax saving.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card reveal">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">€0 <span class="per">/mo</span></div>
+        <div class="plan-desc">For solo founders and freelancers getting started with financial clarity.</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>AI Budget Planner (basic)</li>
+          <li>3-month cashflow forecast</li>
+          <li>Tax overview (1 country)</li>
+          <li>1 connected account</li>
+          <li>Monthly AI insights report</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-outline">Get Started Free</a>
+      </div>
+
+      <!-- Pro (featured) -->
+      <div class="pricing-card featured reveal">
+        <div class="popular-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><sup>€</sup>79 <span class="per">/mo</span></div>
+        <div class="plan-desc">For growing businesses ready to seriously optimize taxes and scale.</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>All 5 AI modules — full access</li>
+          <li>12-month cashflow forecasting</li>
+          <li>Advanced tax optimization</li>
+          <li>Up to 5 connected accounts</li>
+          <li>Weekly AI recommendations</li>
+          <li>Investment intelligence engine</li>
+          <li>Priority email support</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-gold">Start 14-Day Free Trial</a>
+      </div>
+
+      <!-- Command -->
+      <div class="pricing-card reveal">
+        <div class="plan-name">Command</div>
+        <div class="plan-price"><sup>€</sup>249 <span class="per">/mo</span></div>
+        <div class="plan-desc">For high-revenue businesses and teams with complex financial needs.</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>Multi-entity support</li>
+          <li>Custom tax strategies (EU/UK/US)</li>
+          <li>Dedicated AI financial advisor</li>
+          <li>API access + integrations</li>
+          <li>Team collaboration (5 seats)</li>
+          <li>White-glove onboarding</li>
+        </ul>
+        <a href="#" class="plan-cta plan-cta-outline">Book a Demo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="container" style="position:relative; z-index:1;">
+    <div class="section-label" style="text-align:center; display:block;">Start Now</div>
+    <h2>Stop leaving money on the table.</h2>
+    <p>
+      Join 4,200+ entrepreneurs who have taken control of their financial future. First insight in under 8 minutes.
+    </p>
+    <div class="cta-btns">
+      <a href="#pricing" class="btn-primary" style="font-size:0.9rem; padding:1rem 2.5rem;">Get Financial Clarity — Free</a>
+      <a href="#demo" class="btn-secondary">Watch 3-min demo</a>
+    </div>
+    <div class="cta-note">No credit card required · Cancel anytime · GDPR compliant</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo">Fin<span>Command</span></a>
+        <p class="footer-tagline">The AI financial command center for entrepreneurs who want to keep more of what they earn and build something lasting.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Platform</div>
+        <ul class="footer-links">
+          <li><a href="#">AI Budget Planner</a></li>
+          <li><a href="#">Tax Optimizer</a></li>
+          <li><a href="#">Business Optimizer</a></li>
+          <li><a href="#">Scaling Advisor</a></li>
+          <li><a href="#">Investment Intelligence</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Resources</div>
+        <ul class="footer-links">
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Integrations</a></li>
+          <li><a href="#">Case Studies</a></li>
+          <li><a href="#">Tax Guide 2024</a></li>
+          <li><a href="#">Status</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2024 FinCommand. All rights reserved.</div>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Settings</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Intersection observer for reveal animations
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Demo tab interaction
+  const tabs = document.querySelectorAll('.demo-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Nav scroll behavior
+  const nav = document.querySelector('nav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      nav.style.borderBottomColor = 'rgba(255,255,255,0.1)';
+    } else {
+      nav.style.borderBottomColor = 'rgba(255,255,255,0.07)';
+    }
+  });
+</script>
+</body>
+</html>
