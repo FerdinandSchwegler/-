@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WealthOS — Dein Finanzsystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#D4AF37;--gold-light:#F0D060;--gold-dim:#8B7520;
+  --bg:#04070F;--bg2:#080E1C;--bg3:#0D1628;
+  --text:#EDE8D0;--text-dim:#A09870;
+  --border:rgba(212,175,55,0.18);--border-hover:rgba(212,175,55,0.45);
+  --radius:12px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ---- CANVAS ---- */
+#coins-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35}
+
+/* ---- NAV ---- */
+nav{position:fixed;top:0;width:100%;z-index:100;padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid var(--border);backdrop-filter:blur(20px);background:rgba(4,7,15,0.85)}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase}
+.logo span{color:var(--text-dim)}
+nav-links{display:flex;gap:2rem}
+.nav-link{cursor:pointer;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);transition:color 0.2s}
+.nav-link:hover{color:var(--gold)}
+.nav-links{display:flex;gap:2rem}
+
+/* ---- HERO ---- */
+#hero{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem}
+.hero-eyebrow{font-size:0.72rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1.8rem;display:flex;align-items:center;gap:0.75rem}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';display:block;width:40px;height:0.5px;background:var(--gold-dim)}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(3.2rem,7vw,6.2rem);font-weight:300;line-height:1.05;letter-spacing:-0.01em;color:var(--text);max-width:900px}
+h1 em{font-style:italic;color:var(--gold)}
+.hero-sub{margin-top:1.5rem;font-size:1.05rem;font-weight:300;color:var(--text-dim);max-width:560px;line-height:1.8}
+.cta-group{margin-top:3rem;display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center}
+.btn-primary{background:var(--gold);color:#04070F;border:none;padding:0.9rem 2.4rem;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all 0.2s}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-2px)}
+.btn-ghost{background:transparent;color:var(--gold);border:0.5px solid var(--border-hover);padding:0.9rem 2.4rem;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all 0.2s}
+.btn-ghost:hover{background:rgba(212,175,55,0.07);border-color:var(--gold)}
+.scroll-indicator{position:absolute;bottom:2.5rem;display:flex;flex-direction:column;align-items:center;gap:0.5rem;color:var(--text-dim);font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.scroll-line{width:0.5px;height:40px;background:linear-gradient(to bottom,transparent,var(--gold-dim))}
+
+/* ---- STATS ---- */
+#stats{position:relative;z-index:1;padding:5rem 3rem;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;max-width:900px;margin:0 auto}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);padding:2.5rem 2rem;text-align:center}
+.stat-card:first-child{border-radius:var(--radius) 0 0 var(--radius)}
+.stat-card:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:var(--gold)}
+.stat-label{font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-top:0.4rem}
+
+/* ---- SECTIONS ---- */
+.section{position:relative;z-index:1;padding:6rem 3rem;max-width:1100px;margin:0 auto}
+.section-label{font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.8rem}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:300;line-height:1.2;margin-bottom:3rem}
+.section-title em{color:var(--gold);font-style:italic}
+
+/* ---- TOOL TABS ---- */
+.tool-tabs{display:flex;gap:0;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:2.5rem}
+.tab-btn{flex:1;padding:0.9rem 1rem;background:transparent;border:none;color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border-right:0.5px solid var(--border)}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:var(--gold);color:#04070F;font-weight:600}
+.tab-btn:hover:not(.active){background:rgba(212,175,55,0.07);color:var(--gold)}
+
+/* ---- TOOL PANELS ---- */
+.tool-panel{display:none;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:2.5rem;animation:fadeIn 0.3s ease}
+.tool-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+
+/* ---- FORM ELEMENTS ---- */
+.form-group{margin-bottom:1.4rem}
+label.field-label{display:block;font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.5rem}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;padding:0.75rem 1rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.92rem;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,0.1)}
+select option{background:var(--bg3);color:var(--text)}
+textarea{resize:vertical;min-height:80px}
+.checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+.checkbox-item{display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.85rem;color:var(--text-dim)}
+.checkbox-item input{width:14px;height:14px;accent-color:var(--gold);cursor:pointer}
+.checkbox-item:hover{color:var(--text)}
+
+/* ---- RESULTS ---- */
+.result-panel{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.8rem;min-height:200px;display:flex;flex-direction:column;gap:1rem}
+.result-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--text-dim);font-size:0.85rem;letter-spacing:0.05em;gap:0.8rem;opacity:0.5;text-align:center}
+.result-placeholder .icon{font-size:2rem;opacity:0.4}
+.result-item{border-left:2px solid var(--gold);padding:0.9rem 1rem;background:rgba(212,175,55,0.04);border-radius:0 8px 8px 0;margin-bottom:0.7rem}
+.result-item-title{font-weight:500;font-size:0.95rem;color:var(--gold-light);margin-bottom:0.3rem}
+.result-item-body{font-size:0.82rem;color:var(--text-dim);line-height:1.65}
+.result-item-meta{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.6rem}
+.meta-tag{font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.6rem;border:0.5px solid var(--border);border-radius:4px;color:var(--text-dim)}
+.meta-tag.income{border-color:rgba(34,197,94,0.3);color:#4ade80}
+.meta-tag.risk-low{border-color:rgba(34,197,94,0.3);color:#4ade80}
+.meta-tag.risk-mid{border-color:rgba(234,179,8,0.3);color:#facc15}
+.meta-tag.risk-high{border-color:rgba(239,68,68,0.3);color:#f87171}
+.rate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;margin-bottom:1rem}
+.rate-card{background:rgba(212,175,55,0.06);border:0.5px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
+.rate-card-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--gold)}
+.rate-card-label{font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-top:0.3rem}
+.proj-table{width:100%;border-collapse:collapse;font-size:0.83rem}
+.proj-table th{text-align:left;padding:0.5rem 0.7rem;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);border-bottom:0.5px solid var(--border)}
+.proj-table td{padding:0.55rem 0.7rem;border-bottom:0.5px solid rgba(212,175,55,0.07)}
+.proj-table tr:last-child td{border-bottom:none}
+.proj-table .highlight{color:var(--gold);font-weight:500}
+.divider{height:0.5px;background:var(--border);margin:1rem 0}
+.strategy-box{background:rgba(212,175,55,0.05);border:0.5px solid var(--border);border-radius:8px;padding:1rem 1.2rem}
+.strategy-box h4{font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.6rem}
+.strategy-box ul{list-style:none;display:flex;flex-direction:column;gap:0.4rem}
+.strategy-box li{font-size:0.82rem;color:var(--text-dim);padding-left:1rem;position:relative;line-height:1.5}
+.strategy-box li::before{content:'—';position:absolute;left:0;color:var(--gold-dim)}
+.pro-con{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.5rem}
+.pro-list,.con-list{background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:0.9rem 1rem}
+.pro-list h5{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:#4ade80;margin-bottom:0.5rem}
+.con-list h5{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:#f87171;margin-bottom:0.5rem}
+.pro-list li,.con-list li{font-size:0.8rem;color:var(--text-dim);margin-bottom:0.35rem;padding-left:0.8rem;position:relative;line-height:1.5}
+.pro-list li::before{content:'✓';position:absolute;left:0;color:#4ade80}
+.con-list li::before{content:'✗';position:absolute;left:0;color:#f87171}
+.risk-bar-wrap{margin:0.5rem 0}
+.risk-bar-label{font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.4rem}
+.risk-bar{height:5px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden}
+.risk-fill{height:100%;border-radius:99px;transition:width 0.6s ease}
+.error-msg{color:#f87171;font-size:0.82rem;padding:0.5rem 0}
+
+/* ---- FEATURES STRIP ---- */
+.features-strip{position:relative;z-index:1;padding:4rem 3rem;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);background:var(--bg2)}
+.features-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem}
+.feature-item h3{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:400;color:var(--gold);margin-bottom:0.6rem}
+.feature-item p{font-size:0.85rem;color:var(--text-dim);line-height:1.7}
+.feature-num{font-family:'Cormorant Garamond',serif;font-size:0.9rem;color:var(--gold-dim);margin-bottom:0.8rem;letter-spacing:0.1em}
+
+/* ---- FOOTER ---- */
+footer{position:relative;z-index:1;padding:3rem;text-align:center;border-top:0.5px solid var(--border)}
+footer p{font-size:0.75rem;color:var(--text-dim);letter-spacing:0.08em}
+
+/* ---- LOADING ---- */
+.loading{display:none;align-items:center;gap:0.6rem;color:var(--text-dim);font-size:0.82rem}
+.loading.show{display:flex}
+.spinner{width:14px;height:14px;border:1.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<canvas id="coins-canvas"></canvas>
+
+<nav>
+  <div class="logo">Wealth<span>OS</span></div>
+  <div class="nav-links">
+    <span class="nav-link" onclick="scrollToSection('tools')">Tools</span>
+    <span class="nav-link" onclick="scrollToSection('features')">Vorteile</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">Finanzsystem · KI-gestützt · Ohne Anmeldung</div>
+  <h1>Mehr Geld. <em>Jeden Monat.</em><br>Ohne Kompromisse.</h1>
+  <p class="hero-sub">Drei präzise Tools, die dir zeigen — wo dein Geld hingeht, wie du schneller sparst und wie es für dich arbeitet.</p>
+  <div class="cta-group">
+    <button class="btn-primary" onclick="scrollToSection('tools')">Jetzt kostenlos nutzen</button>
+    <button class="btn-ghost" onclick="scrollToSection('features')">Wie es funktioniert</button>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- STATS -->
+<div id="stats">
+  <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Präzise Tools</div></div>
+  <div class="stat-card"><div class="stat-num">&lt;30s</div><div class="stat-label">Bis zum Ergebnis</div></div>
+  <div class="stat-card"><div class="stat-num">0€</div><div class="stat-label">Für immer gratis</div></div>
+</div>
+
+<!-- TOOLS -->
+<section id="tools" class="section">
+  <div class="section-label">Die drei Systeme</div>
+  <div class="section-title">Alles was du brauchst,<br><em>nichts was du nicht brauchst.</em></div>
+
+  <div class="tool-tabs">
+    <button class="tab-btn active" onclick="switchTab('career')">① Karriere-Tool</button>
+    <button class="tab-btn" onclick="switchTab('savings')">② Sparziel-Rechner</button>
+    <button class="tab-btn" onclick="switchTab('invest')">③ Anlageplaner</button>
+  </div>
+
+  <!-- CAREER TOOL -->
+  <div id="panel-career" class="tool-panel active">
+    <div class="tool-grid">
+      <div>
+        <div class="form-group">
+          <label class="field-label">Deine Stärken</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" value="analytisch"> Analytisch</label>
+            <label class="checkbox-item"><input type="checkbox" value="kreativ"> Kreativ</label>
+            <label class="checkbox-item"><input type="checkbox" value="kommunikativ"> Kommunikativ</label>
+            <label class="checkbox-item"><input type="checkbox" value="technisch"> Technisch</label>
+            <label class="checkbox-item"><input type="checkbox" value="organisiert"> Organisiert</label>
+            <label class="checkbox-item"><input type="checkbox" value="empathisch"> Empathisch</label>
+            <label class="checkbox-item"><input type="checkbox" value="selbstständig"> Selbstständig</label>
+            <label class="checkbox-item"><input type="checkbox" value="risikofreudig"> Risikofreudig</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Gewünschtes Einkommen (€/Jahr)</label>
+          <select id="c-income">
+            <option value="30000">30.000 – 45.000 €</option>
+            <option value="50000">50.000 – 70.000 €</option>
+            <option value="80000" selected>80.000 – 120.000 €</option>
+            <option value="150000">150.000+ €</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Arbeitsstil</label>
+          <select id="c-style">
+            <option value="angestellt">Angestellt & stabil</option>
+            <option value="freelance">Freelance & flexibel</option>
+            <option value="remote">100% Remote</option>
+            <option value="startup">Startup / unternehmerisch</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Zeiteinsatz für Ausbildung</label>
+          <select id="c-effort">
+            <option value="kurz">Kurz (≤ 2 Jahre)</option>
+            <option value="mittel" selected>Mittel (2–5 Jahre)</option>
+            <option value="lang">Lang (5+ Jahre)</option>
+          </select>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="runCareer()">Empfehlungen berechnen</button>
+        <div class="loading" id="career-loading" style="margin-top:0.8rem"><div class="spinner"></div>Analysiere dein Profil...</div>
+      </div>
+      <div>
+        <div class="result-panel" id="career-result">
+          <div class="result-placeholder"><div class="icon">◈</div><div>Wähle deine Eigenschaften<br>und klicke auf Berechnen.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVINGS TOOL -->
+  <div id="panel-savings" class="tool-panel">
+    <div class="tool-grid">
+      <div>
+        <div class="form-group">
+          <label class="field-label">Sparziel (€)</label>
+          <input type="number" id="s-goal" placeholder="z.B. 10000" min="100">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Zeitraum</label>
+          <input type="number" id="s-time" placeholder="z.B. 24" min="1">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Einheit</label>
+          <select id="s-unit">
+            <option value="months">Monate</option>
+            <option value="years">Jahre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Derzeitiges monatliches Nettoeinkommen (€)</label>
+          <input type="number" id="s-income" placeholder="z.B. 2800" min="0">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Aktuelle monatl. Fixkosten (€)</label>
+          <input type="number" id="s-fixed" placeholder="z.B. 1400" min="0">
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="runSavings()">Sparplan berechnen</button>
+        <div class="loading" id="savings-loading" style="margin-top:0.8rem"><div class="spinner"></div>Berechne deinen Plan...</div>
+      </div>
+      <div>
+        <div class="result-panel" id="savings-result">
+          <div class="result-placeholder"><div class="icon">◈</div><div>Trage dein Sparziel ein<br>und starte die Berechnung.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVEST TOOL -->
+  <div id="panel-invest" class="tool-panel">
+    <div class="tool-grid">
+      <div>
+        <div class="form-group">
+          <label class="field-label">Investitionsbetrag (€)</label>
+          <input type="number" id="i-amount" placeholder="z.B. 5000" min="1">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Monatliche Sparrate (€, optional)</label>
+          <input type="number" id="i-monthly" placeholder="z.B. 200" min="0">
+        </div>
+        <div class="form-group">
+          <label class="field-label">Anlageform</label>
+          <select id="i-type">
+            <option value="etf">ETF (Weltmarkt-Index)</option>
+            <option value="aktien">Einzelaktien (diversifiziert)</option>
+            <option value="krypto">Krypto (Bitcoin/Ethereum)</option>
+            <option value="tagesgeld">Tagesgeld / Festgeld</option>
+            <option value="immobilien">Immobilienfonds (REIT)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Risikoprofil</label>
+          <select id="i-risk">
+            <option value="konservativ">Konservativ (Kapitalerhalt)</option>
+            <option value="ausgewogen" selected>Ausgewogen</option>
+            <option value="wachstum">Wachstum (höheres Risiko)</option>
+          </select>
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="runInvest()">Prognose berechnen</button>
+        <div class="loading" id="invest-loading" style="margin-top:0.8rem"><div class="spinner"></div>Berechne Prognose...</div>
+      </div>
+      <div>
+        <div class="result-panel" id="invest-result">
+          <div class="result-placeholder"><div class="icon">◈</div><div>Trage Betrag & Anlageform ein,<br>um deine Prognose zu sehen.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<div id="features" class="features-strip">
+  <div class="features-inner">
+    <div class="feature-item">
+      <div class="feature-num">01</div>
+      <h3>Keine Anmeldung</h3>
+      <p>Alle Tools funktionieren sofort, ohne Account, ohne E-Mail, ohne versteckte Kosten. Deine Daten verlassen nie deinen Browser.</p>
+    </div>
+    <div class="feature-item">
+      <div class="feature-num">02</div>
+      <h3>Konservative Zahlen</h3>
+      <p>Keine Phantasie-Renditen. Alle Prognosen basieren auf historischen Durchschnittswerten, konservativ kalkuliert für maximale Sicherheit.</p>
+    </div>
+    <div class="feature-item">
+      <div class="feature-num">03</div>
+      <h3>Sofortiger Nutzen</h3>
+      <p>In unter 30 Sekunden vom Input zum Ergebnis. Kein Setup, kein Onboarding, kein Wartezimmer. Nur Ergebnisse.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="logo" style="margin-bottom:0.8rem">Wealth<span>OS</span></div>
+  <p>© 2025 WealthOS · Alle Berechnungen sind Schätzungen und keine Finanzberatung.</p>
+</footer>
+
+<script>
+/* ====== CANVAS COINS ====== */
+(function(){
+  const canvas=document.getElementById('coins-canvas');
+  const ctx=canvas.getContext('2d');
+  let coins=[];
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+  resize();
+  window.addEventListener('resize',resize);
+  function createCoin(){
+    return{
+      x:Math.random()*canvas.width,
+      y:-30,
+      r:Math.random()*10+5,
+      speed:Math.random()*1.2+0.4,
+      swing:Math.random()*1.5+0.5,
+      swingOffset:Math.random()*Math.PI*2,
+      rot:Math.random()*Math.PI*2,
+      rotSpeed:(Math.random()-0.5)*0.06,
+      alpha:Math.random()*0.5+0.3,
+      scale:1,
+      squish:0,
+      squishDir:1,
+    };
+  }
+  for(let i=0;i<18;i++){
+    let c=createCoin();
+    c.y=Math.random()*window.innerHeight;
+    coins.push(c);
+  }
+  function drawCoin(c,t){
+    ctx.save();
+    ctx.translate(c.x,c.y);
+    ctx.rotate(c.rot);
+    const squishX=1+Math.sin(c.squish)*0.25;
+    const squishY=1-Math.sin(c.squish)*0.18;
+    ctx.scale(squishX,squishY);
+    ctx.globalAlpha=c.alpha;
+    const grad=ctx.createRadialGradient(-c.r*0.2,-c.r*0.3,c.r*0.1,0,0,c.r);
+    grad.addColorStop(0,'rgba(240,208,96,0.9)');
+    grad.addColorStop(0.6,'rgba(212,175,55,0.7)');
+    grad.addColorStop(1,'rgba(100,80,10,0.4)');
+    ctx.beginPath();
+    ctx.ellipse(0,0,c.r,c.r*0.45,0,0,Math.PI*2);
+    ctx.fillStyle=grad;
+    ctx.fill();
+    ctx.strokeStyle='rgba(240,208,96,0.3)';
+    ctx.lineWidth=0.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+  let frame=0;
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    frame++;
+    coins.forEach((c,i)=>{
+      c.y+=c.speed;
+      c.x+=Math.sin(frame*0.01*c.swing+c.swingOffset)*0.6;
+      c.rot+=c.rotSpeed;
+      c.squish+=0.04*c.squishDir;
+      if(c.squish>Math.PI||c.squish<0)c.squishDir*=-1;
+      if(c.y>canvas.height+40){
+        coins[i]=createCoin();
+      }
+      drawCoin(c,frame);
+    });
+    if(frame%120===0&&coins.length<25)coins.push(createCoin());
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ====== NAVIGATION ====== */
+function scrollToSection(id){
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+}
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+/* ====== CAREER LOGIC ====== */
+const CAREERS={
+  analytisch:{
+    studium:[
+      {name:'Data Science / KI',grund:'Analytisches Denken trifft modernste Technologie',einkommen:'60.000–110.000 €/J',aufwand:'4–5 Jahre',risiko:'niedrig'},
+      {name:'Wirtschaftsmathematik',grund:'Hochwertige Quantitative Analyse für Finanz- & Unternehmensbereich',einkommen:'55.000–95.000 €/J',aufwand:'4 Jahre',risiko:'niedrig'},
+    ],
+    ausbildung:[
+      {name:'Fachinformatiker Anwendungsentwicklung',grund:'Direkter Einstieg in Tech mit starkem Markt',einkommen:'38.000–62.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Business Analyst',grund:'Übersetzer zwischen Daten und Geschäftsentscheidungen',einkommen:'55.000–85.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    ],
+    startup:[
+      {name:'SaaS Analytics-Tool',grund:'Nischenanalyse-Produkte für KMU mit Abo-Modell',einkommen:'0–200k+ (variabel)',aufwand:'Hoch',risiko:'hoch'},
+    ],
+  },
+  kreativ:{
+    studium:[
+      {name:'UX/UI Design (Mediengestaltung)',grund:'Kreativität trifft Nutzerbedarf — sehr gefragtes Profil',einkommen:'48.000–90.000 €/J',aufwand:'3–4 Jahre',risiko:'mittel'},
+    ],
+    ausbildung:[
+      {name:'Mediengestalter Digital',grund:'Praxisnahe Ausbildung mit direktem Berufseinstieg',einkommen:'32.000–55.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Creative Strategist',grund:'Verbindet Markenstrategie mit kreativer Umsetzung',einkommen:'52.000–85.000 €/J',aufwand:'Mittel',risiko:'mittel'},
+    ],
+    startup:[
+      {name:'Kreativagentur / Brand Studio',grund:'Freelance → Boutique-Agentur mit klarem Nischenfokus',einkommen:'30–150k (variabel)',aufwand:'Mittel-Hoch',risiko:'mittel'},
+    ],
+  },
+  technisch:{
+    studium:[
+      {name:'Informatik / Software Engineering',grund:'Fundamentalste Tech-Ausbildung mit höchstem Einkommenspotenzial',einkommen:'65.000–130.000 €/J',aufwand:'4–5 Jahre',risiko:'niedrig'},
+      {name:'Elektrotechnik / Embedded Systems',grund:'Hardware-nahe Skills mit sehr hoher Nachfrage in der Industrie',einkommen:'55.000–100.000 €/J',aufwand:'4–5 Jahre',risiko:'niedrig'},
+    ],
+    ausbildung:[
+      {name:'Fachinformatiker Systemintegration',grund:'Netzwerke & Infrastruktur — Fundament jedes Unternehmens',einkommen:'36.000–58.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Senior Backend Developer',grund:'Konstant hohe Nachfrage, ortsunabhängig einsetzbar',einkommen:'70.000–120.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    ],
+    startup:[
+      {name:'Developer-Tool / API-Startup',grund:'Baue Tools für andere Entwickler — Bootstrap-fähig, hohe Margen',einkommen:'0–500k+ (variabel)',aufwand:'Hoch',risiko:'mittel-hoch'},
+    ],
+  },
+  kommunikativ:{
+    studium:[
+      {name:'BWL / Management',grund:'Breite Basis für Führungspositionen und Vertrieb',einkommen:'50.000–100.000 €/J',aufwand:'3–4 Jahre',risiko:'niedrig'},
+    ],
+    ausbildung:[
+      {name:'Kaufmann/-frau im Groß- und Außenhandel',grund:'Schneller Einstieg in B2B-Vertrieb mit gutem Gehalt',einkommen:'34.000–58.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Sales Manager / Account Executive',grund:'Direkte Verbindung von Kommunikation und Einkommen (Provision)',einkommen:'55.000–120.000 €/J',aufwand:'Gering',risiko:'mittel'},
+    ],
+    startup:[
+      {name:'Online-Beratung / Coaching Boutique',grund:'Expertise + Kommunikation = skalierbares Beratungsmodell',einkommen:'30–200k (variabel)',aufwand:'Mittel',risiko:'mittel'},
+    ],
+  },
+  organisiert:{
+    studium:[
+      {name:'Projektmanagement / Wirtschaftsinformatik',grund:'PM ist Rückgrat jedes Tech-Unternehmens',einkommen:'52.000–95.000 €/J',aufwand:'4 Jahre',risiko:'niedrig'},
+    ],
+    ausbildung:[
+      {name:'Industriekaufmann/-frau',grund:'Sehr breite Ausbildung, gute Übernahme- und Aufstiegschancen',einkommen:'32.000–55.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Operations Manager',grund:'Steuert Prozesse und spart Unternehmen viel Geld — sehr begehrt',einkommen:'58.000–95.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    ],
+    startup:[
+      {name:'Remote-Work Agentur / VA-Service',grund:'Organisationstalent als skalierbare Service-Firma aufbauen',einkommen:'20–120k (variabel)',aufwand:'Mittel',risiko:'mittel'},
+    ],
+  },
+  empathisch:{
+    studium:[
+      {name:'Psychologie / Human Resources',grund:'Verständnis für Menschen als Wettbewerbsvorteil',einkommen:'42.000–80.000 €/J',aufwand:'5 Jahre',risiko:'niedrig'},
+    ],
+    ausbildung:[
+      {name:'Sozialversicherungsfachangestellte/r',grund:'Sicheres Einkommen mit direktem gesellschaftlichem Impact',einkommen:'32.000–52.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'People & Culture Manager',grund:'Wachstumstrend in Tech-Unternehmen, gut bezahlt',einkommen:'52.000–85.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    ],
+    startup:[
+      {name:'Mental-Health / Wellbeing App',grund:'Wachstumsmarkt mit echter gesellschaftlicher Relevanz',einkommen:'0–∞ (variabel)',aufwand:'Hoch',risiko:'hoch'},
+    ],
+  },
+  selbstständig:{
+    studium:[
+      {name:'Entrepreneurship / Wirtschaft',grund:'Fundament für selbstständiges Unternehmertum',einkommen:'variabel',aufwand:'3–4 Jahre',risiko:'mittel'},
+    ],
+    ausbildung:[
+      {name:'Kaufmann/-frau für Büromanagement',grund:'Breite Basis für eigene Firma oder Freelancing',einkommen:'30.000–50.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Freelance Consultant / Berater',grund:'Unabhängigkeit von Tag eins, hohes Stundensatz-Potenzial',einkommen:'50–200k (variabel)',aufwand:'Gering–Mittel',risiko:'mittel'},
+    ],
+    startup:[
+      {name:'One-Person-Business (Solopreneur)',grund:'Maximale Autonomie, minimaler Overhead — digitale Produkte',einkommen:'30–300k+ (variabel)',aufwand:'Hoch',risiko:'mittel'},
+    ],
+  },
+  risikofreudig:{
+    studium:[
+      {name:'Finance / Investment Banking',grund:'Hohes Einstiegsgehalt, extreme Aufstiegschancen',einkommen:'70.000–200.000+ €/J',aufwand:'4–5 Jahre',risiko:'mittel'},
+    ],
+    ausbildung:[
+      {name:'Bankkaufmann/-frau',grund:'Einstieg in Finanzwelt mit Weiterbildungspfad zu Top-Positionen',einkommen:'34.000–60.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    ],
+    job:[
+      {name:'Venture Capital Analyst',grund:'Früh in Startup-Ökosystem einsteigen, enorme Lernkurve',einkommen:'55.000–120.000 €/J + Carry',aufwand:'Mittel',risiko:'mittel'},
+    ],
+    startup:[
+      {name:'VC-backed Tech Startup',grund:'Höchstes Risiko, höchste potenzielle Belohnung',einkommen:'0–Millionen (variabel)',aufwand:'Sehr hoch',risiko:'sehr hoch'},
+    ],
+  },
+};
+const DEFAULT_CAREERS={
+  studium:[
+    {name:'Wirtschaftsinformatik',grund:'Brücke zwischen Business und Tech — überall gefragt',einkommen:'55.000–95.000 €/J',aufwand:'4 Jahre',risiko:'niedrig'},
+    {name:'BWL',grund:'Breite Grundlage für viele Karrierepfade',einkommen:'45.000–90.000 €/J',aufwand:'3–4 Jahre',risiko:'niedrig'},
+    {name:'Ingenieurwissenschaften',grund:'Ingenieursknappheit sichert dauerhaft hohes Einkommen',einkommen:'55.000–100.000 €/J',aufwand:'5 Jahre',risiko:'niedrig'},
+    {name:'Medizin',grund:'Krisensicherstes Berufsfeld überhaupt',einkommen:'60.000–200.000 €/J',aufwand:'10+ Jahre',risiko:'sehr niedrig'},
+    {name:'Rechtswissenschaften',grund:'Juristenkompetenz als universelles Kapital',einkommen:'50.000–180.000 €/J',aufwand:'5–7 Jahre',risiko:'niedrig'},
+  ],
+  ausbildung:[
+    {name:'Fachinformatiker Anwendungsentwicklung',grund:'Tech-Einstieg ohne Studium',einkommen:'38.000–62.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    {name:'Steuerfachangestellte/r',grund:'Immer gefragt, sicheres Einkommen',einkommen:'32.000–52.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    {name:'Kaufmann/-frau E-Commerce',grund:'Wachstumsbranche, moderner Job',einkommen:'32.000–55.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+    {name:'Mechatroniker/in',grund:'Kombination aus Mechanik und Elektrik — hohe Nachfrage',einkommen:'34.000–58.000 €/J',aufwand:'3,5 Jahre',risiko:'niedrig'},
+    {name:'Bankkaufmann/-frau',grund:'Solide Basis für Finanzkarriere',einkommen:'34.000–60.000 €/J',aufwand:'3 Jahre',risiko:'niedrig'},
+  ],
+  job:[
+    {name:'Software Developer',grund:'Höchste Nachfrage des Arbeitsmarkts',einkommen:'60.000–120.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    {name:'Product Manager',grund:'Steuert Produkte & Teams — sehr begehrt',einkommen:'65.000–110.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+    {name:'Marketing Manager',grund:'Skalierbare Skills, überall anwendbar',einkommen:'45.000–85.000 €/J',aufwand:'Gering–Mittel',risiko:'niedrig'},
+    {name:'Steuerberater/in',grund:'Dauerhafter Bedarf, gute Bezahlung',einkommen:'55.000–120.000 €/J',aufwand:'Hoch',risiko:'sehr niedrig'},
+    {name:'Data Analyst',grund:'Daten als neue Währung — hohe Nachfrage',einkommen:'50.000–85.000 €/J',aufwand:'Mittel',risiko:'niedrig'},
+  ],
+  startup:[
+    {name:'Micro-SaaS Tool',grund:'Kleines, fokussiertes Software-Produkt für Nische',einkommen:'0–200k+ (variabel)',aufwand:'Mittel-Hoch',risiko:'mittel'},
+    {name:'Content / Creator Business',grund:'Expertise in Inhalte verwandeln — skalierbar',einkommen:'0–500k+ (variabel)',aufwand:'Mittel',risiko:'mittel'},
+    {name:'E-Commerce Nische',grund:'Physische oder digitale Produkte mit Fokus',einkommen:'0–∞ (variabel)',aufwand:'Mittel-Hoch',risiko:'hoch'},
+    {name:'Consulting Boutique',grund:'Expertise monetarisieren, geringe Startkosten',einkommen:'30–200k (variabel)',aufwand:'Mittel',risiko:'mittel'},
+    {name:'KI-powered Service',grund:'AI-Tools für spezifische Branche oder Funktion anbieten',einkommen:'0–300k+ (variabel)',aufwand:'Hoch',risiko:'mittel-hoch'},
+  ],
+};
+
+function runCareer(){
+  const checked=[...document.querySelectorAll('#panel-career input[type=checkbox]:checked')].map(el=>el.value);
+  const income=document.getElementById('c-income').value;
+  const style=document.getElementById('c-style').value;
+  const effort=document.getElementById('c-effort').value;
+  const loading=document.getElementById('career-loading');
+  loading.classList.add('show');
+  setTimeout(()=>{
+    loading.classList.remove('show');
+    let studien=[],ausbildungen=[],jobs=[],startups=[];
+    if(checked.length===0){
+      studien=DEFAULT_CAREERS.studium;ausbildungen=DEFAULT_CAREERS.ausbildung;
+      jobs=DEFAULT_CAREERS.job;startups=DEFAULT_CAREERS.startup;
+    } else {
+      checked.forEach(s=>{
+        if(CAREERS[s]){
+          if(CAREERS[s].studium)studien.push(...CAREERS[s].studium);
+          if(CAREERS[s].ausbildung)ausbildungen.push(...CAREERS[s].ausbildung);
+          if(CAREERS[s].job)jobs.push(...CAREERS[s].job);
+          if(CAREERS[s].startup)startups.push(...CAREERS[s].startup);
+        }
+      });
+      if(studien.length<3){studien=[...studien,...DEFAULT_CAREERS.studium].slice(0,5);}
+      if(ausbildungen.length<3){ausbildungen=[...ausbildungen,...DEFAULT_CAREERS.ausbildung].slice(0,5);}
+      if(jobs.length<3){jobs=[...jobs,...DEFAULT_CAREERS.job].slice(0,5);}
+      if(startups.length<2){startups=[...startups,...DEFAULT_CAREERS.startup].slice(0,5);}
+    }
+    function unique(arr){const seen=new Set();return arr.filter(i=>{if(seen.has(i.name))return false;seen.add(i.name);return true;}).slice(0,5)}
+    studien=unique(studien);ausbildungen=unique(ausbildungen);jobs=unique(jobs);startups=unique(startups);
+    function renderItems(arr,emoji){
+      return arr.map(i=>{
+        const riskClass=i.risiko==='niedrig'||i.risiko==='sehr niedrig'?'risk-low':i.risiko==='mittel'?'risk-mid':'risk-high';
+        return`<div class="result-item">
+          <div class="result-item-title">${emoji} ${i.name}</div>
+          <div class="result-item-body">${i.grund}</div>
+          <div class="result-item-meta">
+            <span class="meta-tag income">💰 ${i.einkommen}</span>
+            <span class="meta-tag">⏱ ${i.aufwand}</span>
+            <span class="meta-tag ${riskClass}">⚡ Risiko: ${i.risiko}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    const html=`
+      <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem">Deine personalisierten Empfehlungen</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em">🎓 Studium</div>
+      ${renderItems(studien,'📚')}
+      <div style="font-size:0.8rem;color:var(--text-dim);margin:1rem 0 0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em">🛠 Ausbildung</div>
+      ${renderItems(ausbildungen,'🔧')}
+      <div style="font-size:0.8rem;color:var(--text-dim);margin:1rem 0 0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em">💼 Jobs</div>
+      ${renderItems(jobs,'💼')}
+      <div style="font-size:0.8rem;color:var(--text-dim);margin:1rem 0 0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em">🚀 Startup-Ideen</div>
+      ${renderItems(startups,'💡')}
+    `;
+    document.getElementById('career-result').innerHTML=html;
+  },900);
+}
+
+/* ====== SAVINGS LOGIC ====== */
+function runSavings(){
+  const goal=parseFloat(document.getElementById('s-goal').value)||0;
+  const timeVal=parseFloat(document.getElementById('s-time').value)||0;
+  const unit=document.getElementById('s-unit').value;
+  const incomeVal=parseFloat(document.getElementById('s-income').value)||0;
+  const fixedVal=parseFloat(document.getElementById('s-fixed').value)||0;
+  const res=document.getElementById('savings-result');
+  if(!goal||!timeVal){res.innerHTML='<div class="error-msg">⚠ Bitte Sparziel und Zeitraum eingeben.</div>';return;}
+  const loading=document.getElementById('savings-loading');
+  loading.classList.add('show');
+  setTimeout(()=>{
+    loading.classList.remove('show');
+    const months=unit==='years'?timeVal*12:timeVal;
+    const monthly=goal/months;
+    const weekly=goal/(months*4.33);
+    const daily=goal/(months*30.44);
+    const disposable=incomeVal-fixedVal;
+    const pct=disposable>0?((monthly/disposable)*100).toFixed(1):null;
+    const feasible=disposable>0&&monthly<=disposable;
+    let tipps=[];
+    if(monthly<=500)tipps=['Automatische Dauerauftrag am 1. des Monats einrichten','Kein Geld ausgeben, was nicht zugewiesen ist','Separate Sparkonto einrichten (mental accounting)'];
+    else if(monthly<=1500)tipps=['Fixkosten-Audit: Welche Abos können gekündigt werden?','Lebensmittelkosten senken: Wochenplanung + Kochbatch','Energiekosten optimieren (Tarif vergleichen, anbieterwechsel)'];
+    else tipps=['Einnahmen steigern (Nebenjob, Freelancing, Überstunden)','Größte Kostenpositionen zuerst angreifen (Miete, Auto)','Luxusausgaben temporär auf Null setzen','Sparquote täglich tracken bis der Plan sitzt'];
+    const feasibleMsg=disposable>0?(feasible?`<div style="color:#4ade80;font-size:0.82rem;margin:0.5rem 0">✓ Realistisch: entspricht ${pct}% deines verfügbaren Einkommens</div>`:`<div style="color:#f87171;font-size:0.82rem;margin:0.5rem 0">⚠ Herausfordernd: ${pct}% deines Einkommens. Einnahmen steigern oder Ziel anpassen.</div>`):'';
+    const html=`
+      <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem">Dein Sparplan für ${goal.toLocaleString('de-DE')} €</div>
+      <div class="rate-grid">
+        <div class="rate-card"><div class="rate-card-num">${daily.toFixed(2).replace('.',',')} €</div><div class="rate-card-label">Pro Tag</div></div>
+        <div class="rate-card"><div class="rate-card-num">${weekly.toFixed(2).replace('.',',')} €</div><div class="rate-card-label">Pro Woche</div></div>
+        <div class="rate-card"><div class="rate-card-num">${monthly.toFixed(2).replace('.',',')} €</div><div class="rate-card-label">Pro Monat</div></div>
+      </div>
+      ${feasibleMsg}
+      <div class="divider"></div>
+      <div class="strategy-box">
+        <h4>Strategie zur Umsetzung</h4>
+        <ul>${tipps.map(t=>`<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-dim);margin-top:1rem;padding-top:0.8rem;border-top:0.5px solid var(--border)">
+        Zeitraum: <strong style="color:var(--gold)">${months.toFixed(0)} Monate</strong> · 
+        Gesamtziel: <strong style="color:var(--gold)">${goal.toLocaleString('de-DE')} €</strong>
+      </div>
+    `;
+    res.innerHTML=html;
+  },700);
+}
+
+/* ====== INVEST LOGIC ====== */
+const INVEST_DATA={
+  etf:{name:'ETF (Weltmarkt-Index)',konservativ:0.055,ausgewogen:0.072,wachstum:0.09,risikoLevel:30,pros:['Breite Diversifikation (1 Produkt = tausende Aktien)','Günstige Kosten (0,1–0,3% p.a.)','Historisch zuverlässigste Rendite für Privatanleger','Leicht handelbar, jederzeit liquidierbar'],cons:['Abhängig von globaler Wirtschaft','Kein sofortiger Reichtum — Geduld nötig','Kurzfristige Schwankungen bis –40% möglich'],empfehlung:'Top-Empfehlung für sparsame Anleger. MSCI World oder FTSE All-World. Mindesthorizont: 10+ Jahre.'},
+  aktien:{name:'Einzelaktien (diversifiziert)',konservativ:0.06,ausgewogen:0.085,wachstum:0.12,risikoLevel:55,pros:['Potenzial zum Markt outperformen','Dividenden als passives Einkommen','Volle Kontrolle über Auswahl'],cons:['Höheres Einzelrisiko als ETF','Zeitaufwand für Research nötig','Emotionale Entscheidungen kosten Rendite'],empfehlung:'Nur für erfahrene Anleger. Mindestens 15–20 Aktien für echte Diversifikation.'},
+  krypto:{name:'Krypto (Bitcoin / Ethereum)',konservativ:0.0,ausgewogen:0.10,wachstum:0.20,risikoLevel:90,pros:['Sehr hohes Renditepotenzial','Unkorreliert zu klassischen Märkten','24/7 handelbar, global zugänglich'],cons:['Extremste Volatilität aller Anlageklassen','Regulatorisches Risiko jederzeit möglich','Totalverlust realistisch — kein Einlagenschutz','Psychologisch extrem belastend bei Crashes'],empfehlung:'Maximal 5–10% des Portfolios. Nie mehr investieren als man verlieren kann. Keine langfristige Hauptanlage.'},
+  tagesgeld:{name:'Tagesgeld / Festgeld',konservativ:0.028,ausgewogen:0.035,wachstum:0.04,risikoLevel:5,pros:['Keine Wertverluste bei seriösen Banken','Einlagengesichert bis 100.000 €','Sofort verfügbar (Tagesgeld)'],cons:['Rendite oft unter Inflationsrate','Kein Wachstumspotenzial langfristig','Kaufkraft schwindet real mit der Zeit'],empfehlung:'Nur für den Notgroschen (3–6 Monatsgehälter). Kein Baustein für Vermögensaufbau.'},
+  immobilien:{name:'Immobilienfonds (REIT)',konservativ:0.045,ausgewogen:0.065,wachstum:0.085,risikoLevel:40,pros:['Immobilienexposition ohne direkten Kauf','Regelmäßige Ausschüttungen','Sachwert-Charakter als Inflationsschutz'],cons:['Zinssensitiv — steigen Zinsen, fallen REITs','Geringere Liquidität als ETFs','Managementgebühren schmälern Rendite'],empfehlung:'Gute Ergänzung zu ETFs. 10–20% Portfolioanteil als Beimischung sinnvoll.'},
+};
+function compoundCalc(principal,monthly,rate,years){
+  let val=principal;
+  for(let y=0;y<years;y++){for(let m=0;m<12;m++){val=val*(1+rate/12)+monthly;}}
+  return val;
+}
+function runInvest(){
+  const amount=parseFloat(document.getElementById('i-amount').value)||0;
+  const monthly=parseFloat(document.getElementById('i-monthly').value)||0;
+  const type=document.getElementById('i-type').value;
+  const risk=document.getElementById('i-risk').value;
+  const res=document.getElementById('invest-result');
+  if(!amount){res.innerHTML='<div class="error-msg">⚠ Bitte Investitionsbetrag eingeben.</div>';return;}
+  const loading=document.getElementById('invest-loading');
+  loading.classList.add('show');
+  setTimeout(()=>{
+    loading.classList.remove('show');
+    const data=INVEST_DATA[type];
+    const rate=data[risk];
+    const years=[1,3,5,10];
+    const rows=years.map(y=>{
+      const val=compoundCalc(amount,monthly,rate,y);
+      const invested=amount+monthly*12*y;
+      const gain=val-invested;
+      const gainPct=((gain/invested)*100).toFixed(1);
+      return{y,val,invested,gain,gainPct};
+    });
+    const riskPct=data.risikoLevel;
+    const riskColor=riskPct<30?'#4ade80':riskPct<60?'#facc15':'#f87171';
+    const html=`
+      <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:1rem">${data.name} — ${risk} Profil</div>
+      <table class="proj-table">
+        <thead><tr>
+          <th>Zeitraum</th><th>Endwert</th><th>Investiert</th><th>Gewinn</th><th>+%</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`<tr>
+            <td>${r.y} J.</td>
+            <td class="highlight">${Math.round(r.val).toLocaleString('de-DE')} €</td>
+            <td style="color:var(--text-dim)">${Math.round(r.invested).toLocaleString('de-DE')} €</td>
+            <td style="color:#4ade80">+${Math.round(r.gain).toLocaleString('de-DE')} €</td>
+            <td style="color:#4ade80">+${r.gainPct}%</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="divider"></div>
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-label">Risikolevel: ${riskPct}/100</div>
+        <div class="risk-bar"><div class="risk-fill" style="width:${riskPct}%;background:${riskColor}"></div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="pro-con">
+        <div class="pro-list"><h5>Vorteile</h5><ul>${data.pros.map(p=>`<li>${p}</li>`).join('')}</ul></div>
+        <div class="con-list"><h5>Nachteile</h5><ul>${data.cons.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+      </div>
+      <div class="strategy-box" style="margin-top:0.8rem">
+        <h4>Empfehlung für sparsame Anleger</h4>
+        <ul><li>${data.empfehlung}</li></ul>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-top:0.8rem;opacity:0.6">Rendite: ${(rate*100).toFixed(1)}% p.a. (konservative Schätzung) · Keine Finanzberatung</div>
+    `;
+    res.innerHTML=html;
+  },800);
+}
+</script>
+</body>
+</html>
