@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMSON S51 – Vom Einzelteil zum Moped</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #020810;
+    --bg-dark: #040d1a;
+    --bg-card: #071224;
+    --bg-card2: #0a1830;
+    --green-glow: #00ff88;
+    --green-mid: #00cc6a;
+    --green-dark: #009950;
+    --green-dim: #005530;
+    --blue-accent: #0066ff;
+    --blue-dim: #003380;
+    --text-primary: #c8fde0;
+    --text-secondary: #7bbf9a;
+    --text-muted: #3d7a58;
+    --border: #0a3020;
+    --border-bright: #00ff8830;
+    --warn: #ffaa00;
+    --warn-dim: #3a2800;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── LANDING PAGE ─── */
+  #landing {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    background: radial-gradient(ellipse at 50% 60%, #001a40 0%, #020810 70%);
+    overflow: hidden;
+  }
+
+  .moped-silhouette {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    max-width: 100%;
+    opacity: 0.07;
+    pointer-events: none;
+  }
+
+  .scanline {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,136,0.015) 3px, rgba(0,255,136,0.015) 4px);
+    pointer-events: none;
+  }
+
+  .grid-lines {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--green-mid);
+    border: 1px solid var(--green-dim);
+    padding: 6px 16px;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+  }
+
+  .headline {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: clamp(42px, 7vw, 88px);
+    line-height: 1.0;
+    color: #ffffff;
+    text-shadow: 0 0 60px rgba(0,255,136,0.3);
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+  }
+
+  .headline .accent {
+    color: var(--green-glow);
+    text-shadow: 0 0 40px rgba(0,255,136,0.8), 0 0 80px rgba(0,255,136,0.3);
+  }
+
+  .subline {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(18px, 3vw, 28px);
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+  }
+
+  .description {
+    max-width: 620px;
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 50px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--green-glow);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--bg-deep);
+    background: var(--green-glow);
+    padding: 16px 52px;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 40px rgba(0,255,136,0.4);
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .cta-btn:hover {
+    background: #ffffff;
+    box-shadow: 0 0 60px rgba(0,255,136,0.7);
+    transform: translateY(-2px);
+  }
+
+  /* ─── NAVIGATION ─── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(2, 8, 16, 0.97);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green-glow);
+    white-space: nowrap;
+    margin-right: 16px;
+    padding: 16px 0;
+  }
+
+  .nav a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 16px 12px;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+
+  .nav a:hover { color: var(--green-glow); }
+
+  /* ─── MAIN CONTENT ─── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-header {
+    margin-bottom: 50px;
+    border-left: 3px solid var(--green-glow);
+    padding-left: 24px;
+  }
+
+  .section-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--green-mid);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.1;
+  }
+
+  /* ─── COURSE OVERVIEW ─── */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 80px;
+  }
+
+  .overview-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .overview-item:hover {
+    border-color: var(--green-dim);
+    background: var(--bg-card2);
+    transform: translateX(4px);
+  }
+
+  .overview-item.tuning {
+    border-color: #3a2800;
+  }
+
+  .overview-item.tuning:hover {
+    border-color: var(--warn);
+  }
+
+  .ch-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 32px;
+  }
+
+  .ch-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .ch-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 3px 8px;
+    border: 1px solid var(--green-dim);
+    color: var(--green-mid);
+    white-space: nowrap;
+  }
+
+  .ch-badge.tuning-badge {
+    border-color: #3a2800;
+    color: var(--warn);
+  }
+
+  /* ─── CHAPTER ─── */
+  .chapter {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chapter::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-glow), transparent);
+  }
+
+  .chapter-header {
+    padding: 32px 36px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .chapter-num-big {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--green-dim);
+    line-height: 1;
+    min-width: 60px;
+  }
+
+  .chapter-meta h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+
+  .chapter-goal {
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chapter-goal::before {
+    content: '▶';
+    font-size: 9px;
+    color: var(--green-mid);
+  }
+
+  .chapter-body {
+    padding: 32px 36px;
+    display: grid;
+    gap: 32px;
+  }
+
+  /* ─── SUBSECTIONS ─── */
+  .subsection-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .subsection-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── PARTS LIST ─── */
+  .parts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+
+  .part-item {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .part-item::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--green-dim);
+    flex-shrink: 0;
+  }
+
+  /* ─── TOOLS LIST ─── */
+  .tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tool-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    background: var(--bg-deep);
+  }
+
+  /* ─── STEPS ─── */
+  .steps-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 0;
+    position: relative;
+  }
+
+  .step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 44px;
+  }
+
+  .step-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--bg-deep);
+    background: var(--green-mid);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .step-line {
+    flex: 1;
+    width: 1px;
+    background: var(--border);
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .step:last-child .step-line { display: none; }
+
+  .step-content {
+    padding: 4px 0 24px 16px;
+    flex: 1;
+  }
+
+  .step-content strong {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* ─── WARNINGS ─── */
+  .warnings-box {
+    background: var(--warn-dim);
+    border: 1px solid #5a3c00;
+    border-left: 3px solid var(--warn);
+    padding: 20px 24px;
+  }
+
+  .warning-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #e8c070;
+    align-items: flex-start;
+  }
+
+  .warning-item:last-child { margin-bottom: 0; }
+
+  .warning-icon {
+    font-size: 14px;
+    color: var(--warn);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ─── KEY PHRASES ─── */
+  .keyphrases {
+    display: grid;
+    gap: 10px;
+  }
+
+  .keyphrase {
+    background: linear-gradient(135deg, rgba(0,255,136,0.05), transparent);
+    border: 1px solid var(--green-dim);
+    padding: 14px 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--green-glow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .keyphrase::before {
+    content: '★';
+    font-size: 12px;
+    color: var(--green-mid);
+  }
+
+  /* ─── QUIZ ─── */
+  .quiz-box {
+    background: #020c18;
+    border: 1px solid var(--blue-dim);
+    padding: 28px;
+  }
+
+  .quiz-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #4488cc;
+    margin-bottom: 24px;
+  }
+
+  .quiz-question {
+    margin-bottom: 24px;
+  }
+
+  .quiz-q-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #aaccff;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .quiz-q-num {
+    color: var(--blue-accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .quiz-options {
+    display: grid;
+    gap: 6px;
+    padding-left: 28px;
+  }
+
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .quiz-option:hover {
+    border-color: var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+
+  .quiz-option.correct {
+    border-color: var(--green-dim);
+    background: rgba(0,255,136,0.05);
+    color: var(--green-mid);
+  }
+
+  .quiz-option.wrong {
+    border-color: #3a0000;
+    background: rgba(255,0,0,0.05);
+    color: #cc4444;
+  }
+
+  .quiz-option input[type="radio"] {
+    accent-color: var(--green-mid);
+  }
+
+  .quiz-check-btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--green-mid);
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    padding: 10px 24px;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.2s;
+  }
+
+  .quiz-check-btn:hover {
+    background: rgba(0,255,136,0.1);
+    border-color: var(--green-mid);
+  }
+
+  .quiz-result {
+    margin-top: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    display: none;
+  }
+
+  .quiz-result.show { display: block; }
+  .quiz-result.pass { color: var(--green-mid); }
+  .quiz-result.fail { color: var(--danger); }
+
+  /* ─── SUMMARY CHAPTERS ─── */
+  .summary-chapter {
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .summary-header {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    background: var(--bg-card);
+    transition: background 0.2s;
+  }
+
+  .summary-header:hover {
+    background: var(--bg-card2);
+  }
+
+  .summary-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 40px;
+  }
+
+  .summary-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .summary-arrow {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    font-size: 12px;
+  }
+
+  .summary-body {
+    padding: 0 24px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.2s;
+  }
+
+  .summary-body.open {
+    max-height: 1000px;
+    padding: 20px 24px 24px;
+  }
+
+  .summary-body p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .mini-steps {
+    display: grid;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .mini-step {
+    display: flex;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    align-items: flex-start;
+  }
+
+  .mini-step-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--green-dim);
+    min-width: 24px;
+    margin-top: 3px;
+  }
+
+  /* ─── TUNING ─── */
+  .tuning-chapter {
+    background: var(--bg-card);
+    border: 1px solid #3a2800;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tuning-chapter::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--warn), transparent);
+  }
+
+  .tuning-header {
+    padding: 28px 36px 24px;
+    border-bottom: 1px solid #3a2800;
+  }
+
+  .tuning-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #664400;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .tuning-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--warn);
+  }
+
+  .tuning-body {
+    padding: 28px 36px;
+    display: grid;
+    gap: 24px;
+  }
+
+  .tuning-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .tuning-grid { grid-template-columns: 1fr; }
+  }
+
+  .tuning-card {
+    background: var(--bg-deep);
+    border: 1px solid #3a2800;
+    padding: 16px;
+  }
+
+  .tuning-card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tuning-card-title.pro { color: var(--green-mid); }
+  .tuning-card-title.con { color: var(--danger); }
+  .tuning-card-title.info { color: #4488ff; }
+  .tuning-card-title.law { color: var(--warn); }
+
+  .tuning-card ul {
+    list-style: none;
+    display: grid;
+    gap: 5px;
+  }
+
+  .tuning-card ul li {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .tuning-card ul li::before {
+    content: '–';
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .legal-box {
+    background: var(--warn-dim);
+    border: 1px solid #5a3c00;
+    border-left: 3px solid var(--warn);
+    padding: 16px 20px;
+    font-size: 13px;
+    color: #e8c070;
+    line-height: 1.7;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--bg-dark);
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--green-glow);
+    margin-bottom: 10px;
+  }
+
+  footer p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  /* ─── UTILS ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 60px 0;
+  }
+
+  .anchor-target {
+    scroll-margin-top: 70px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════════════ -->
+<section id="landing">
+  <div class="grid-lines"></div>
+  <div class="scanline"></div>
+
+  <svg class="moped-silhouette" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+    <!-- Simson S51 Silhouette – vereinfacht -->
+    <!-- Hinterrad -->
+    <circle cx="220" cy="290" r="80" fill="none" stroke="#00ff88" stroke-width="12"/>
+    <circle cx="220" cy="290" r="48" fill="none" stroke="#00ff88" stroke-width="5"/>
+    <circle cx="220" cy="290" r="10" fill="#00ff88"/>
+    <!-- Vorderrad -->
+    <circle cx="680" cy="290" r="80" fill="none" stroke="#00ff88" stroke-width="12"/>
+    <circle cx="680" cy="290" r="48" fill="none" stroke="#00ff88" stroke-width="5"/>
+    <circle cx="680" cy="290" r="10" fill="#00ff88"/>
+    <!-- Rahmen -->
+    <path d="M300 280 L340 160 L450 140 L560 155 L620 220 L640 280" fill="none" stroke="#00ff88" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="340" y1="160" x2="380" y2="280" stroke="#00ff88" stroke-width="8"/>
+    <!-- Motor -->
+    <rect x="330" y="215" width="130" height="80" rx="8" fill="none" stroke="#00ff88" stroke-width="7"/>
+    <!-- Auspuff -->
+    <path d="M330 260 Q280 275 245 290" fill="none" stroke="#00ff88" stroke-width="7" stroke-linecap="round"/>
+    <!-- Gabel -->
+    <path d="M620 220 L640 150 L670 210" fill="none" stroke="#00ff88" stroke-width="8" stroke-linecap="round"/>
+    <line x1="660" y1="210" x2="680" y2="290" stroke="#00ff88" stroke-width="8"/>
+    <!-- Lenker -->
+    <path d="M640 150 L590 130 M640 150 L680 130" stroke="#00ff88" stroke-width="7" stroke-linecap="round"/>
+    <!-- Tank -->
+    <path d="M420 140 Q480 105 540 130 L560 155 L450 140 Z" fill="none" stroke="#00ff88" stroke-width="6"/>
+    <!-- Sitzbank -->
+    <path d="M360 155 Q420 130 540 130 L560 160 Q480 150 380 175 Z" fill="none" stroke="#00ff88" stroke-width="5"/>
+    <!-- Speichen Hinterrad -->
+    <line x1="220" y1="210" x2="220" y2="370" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="140" y1="290" x2="300" y2="290" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="163" y1="233" x2="277" y2="347" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="163" y1="347" x2="277" y2="233" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <!-- Speichen Vorderrad -->
+    <line x1="680" y1="210" x2="680" y2="370" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="600" y1="290" x2="760" y2="290" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="623" y1="233" x2="737" y2="347" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <line x1="623" y1="347" x2="737" y2="233" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    <!-- Schwinge -->
+    <path d="M300 280 Q260 282 220 290" fill="none" stroke="#00ff88" stroke-width="7" stroke-linecap="round"/>
+  </svg>
+
+  <div class="badge">// Digitaler Kurs — Komplettaufbau</div>
+
+  <h1 class="headline">SIMSON <span class="accent">S51</span></h1>
+  <p class="subline">Vom Einzelteil zum fertigen Moped</p>
+
+  <p class="description">
+    Der einzige Kurs, der dich Schritt für Schritt durch den kompletten Aufbau einer Simson S51 führt — von der ersten Schraube bis zur Erstinbetriebnahme. Kein Vorwissen erforderlich.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">15</div>
+      <div class="stat-label">Kapitel</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Tuning-Module</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">45</div>
+      <div class="stat-label">Quiz-Fragen</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Vorkenntnisse</div>
+    </div>
+  </div>
+
+  <a href="#kursinhalt" class="cta-btn">Jetzt starten</a>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">S51 // KURS</div>
+  <a href="#kursinhalt">Übersicht</a>
+  <a href="#k1">K01 Rahmen</a>
+  <a href="#k2">K02 Gabel</a>
+  <a href="#k3">K03 Schwinge</a>
+  <a href="#k4">K04 Räder</a>
+  <a href="#k5">K05 Bremsen</a>
+  <a href="#k6">K06 Motor</a>
+  <a href="#k7">K07 Vergaser</a>
+  <a href="#k8">K08 Auspuff</a>
+  <a href="#k9">K09 Tank</a>
+  <a href="#k10">K10 Elektrik</a>
+  <a href="#weitere">K11–K15</a>
+  <a href="#tuning">Tuning</a>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     KURSÜBERSICHT
+══════════════════════════════════════════════ -->
+<main>
+<section id="kursinhalt" class="anchor-target">
+  <div class="section-header">
+    <div class="section-eyebrow">// Kursübersicht</div>
+    <h2 class="section-title">Alle 15 Kapitel + 3 Tuning-Module</h2>
+  </div>
+
+  <div class="overview-grid">
+    <div class="overview-item" onclick="document.getElementById('k1').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K01</span>
+      <span class="ch-title">Rahmen vorbereiten</span>
+      <span class="ch-badge">Basis</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k2').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K02</span>
+      <span class="ch-title">Vordergabel montieren</span>
+      <span class="ch-badge">Fahrwerk</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k3').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K03</span>
+      <span class="ch-title">Schwinge & Federbein</span>
+      <span class="ch-badge">Fahrwerk</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k4').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K04</span>
+      <span class="ch-title">Räder & Reifen</span>
+      <span class="ch-badge">Fahrwerk</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k5').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K05</span>
+      <span class="ch-title">Bremsen einbauen</span>
+      <span class="ch-badge">Sicherheit</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k6').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K06</span>
+      <span class="ch-title">Motor einsetzen</span>
+      <span class="ch-badge">Antrieb</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k7').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K07</span>
+      <span class="ch-title">Vergaser montieren</span>
+      <span class="ch-badge">Antrieb</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k8').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K08</span>
+      <span class="ch-title">Auspuffanlage</span>
+      <span class="ch-badge">Antrieb</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k9').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K09</span>
+      <span class="ch-title">Kraftstofftank</span>
+      <span class="ch-badge">Versorgung</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('k10').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K10</span>
+      <span class="ch-title">Elektrik & Kabelbaum</span>
+      <span class="ch-badge">Elektrik</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('weitere').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K11</span>
+      <span class="ch-title">Zündanlage</span>
+      <span class="ch-badge">Elektrik</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('weitere').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K12</span>
+      <span class="ch-title">Lenker & Bedienelemente</span>
+      <span class="ch-badge">Ergonomie</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('weitere').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K13</span>
+      <span class="ch-title">Sitzbank montieren</span>
+      <span class="ch-badge">Aufbau</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('weitere').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K14</span>
+      <span class="ch-title">Verkleidung & Bleche</span>
+      <span class="ch-badge">Finish</span>
+    </div>
+    <div class="overview-item" onclick="document.getElementById('weitere').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">K15</span>
+      <span class="ch-title">Erstinbetriebnahme</span>
+      <span class="ch-badge">Final</span>
+    </div>
+    <div class="overview-item tuning" onclick="document.getElementById('tuning').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">T01</span>
+      <span class="ch-title">Leistungssteigerung</span>
+      <span class="ch-badge tuning-badge">Tuning</span>
+    </div>
+    <div class="overview-item tuning" onclick="document.getElementById('tuning').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">T02</span>
+      <span class="ch-title">Optisches Tuning</span>
+      <span class="ch-badge tuning-badge">Tuning</span>
+    </div>
+    <div class="overview-item tuning" onclick="document.getElementById('tuning').scrollIntoView({behavior:'smooth'})">
+      <span class="ch-num">T03</span>
+      <span class="ch-title">Fahrwerksoptimierung</span>
+      <span class="ch-badge tuning-badge">Tuning</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     KAPITEL 1 — RAHMEN
+══════════════════════════════════════════════ -->
+<section id="k1" class="anchor-target">
+  <div class="section-header">
+    <div class="section-eyebrow">// Vollständig ausgearbeitete Kapitel</div>
+    <h2 class="section-title">Kapitel 01 – 10: Detaillierte Anleitungen</h2>
+  </div>
+
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">01</div>
+      <div class="chapter-meta">
+        <h2>Rahmen vorbereiten & prüfen</h2>
+        <div class="chapter-goal">Ziel: Den Hauptrahmen der S51 sauber vorbereiten, alle Befestigungspunkte prüfen und als tragfähige Basis für den gesamten Aufbau bereitstellen.</div>
+      </div>
+    </div>
+
+    <div class="chapter-body">
+
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Hauptrahmen S51 (Stahlrahmen)</div>
+          <div class="part-item">Motoraufnahmebolzen M10×1,25 (2×)</div>
+          <div class="part-item">Schwingenlager-Buchsen (2×)</div>
+          <div class="part-item">Gabelkopf-Lagersatz (Steuerkopflager)</div>
+          <div class="part-item">Ständeraufnahme-Bolzen M8</div>
+          <div class="part-item">Seitenständer inkl. Feder</div>
+          <div class="part-item">Hauptständer inkl. Feder</div>
+          <div class="part-item">Schutzblech-Halterungen (vorn + hinten)</div>
+          <div class="part-item">Unterlegscheiben sortiert</div>
+          <div class="part-item">Federscheiben M6/M8/M10</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Benötigtes Werkzeug</div>
+        <div class="tools-list">
+          <span class="tool-tag">Drehmomentschlüssel 10–80 Nm</span>
+          <span class="tool-tag">Ringschlüssel SW 13/17/19</span>
+          <span class="tool-tag">Steckschlüssel-Set</span>
+          <span class="tool-tag">Drahtbürste / Stahlbürste</span>
+          <span class="tool-tag">Sichtprüflupe</span>
+          <span class="tool-tag">Gewindeschneider M10×1,25</span>
+          <span class="tool-tag">Wasserwaage klein</span>
+          <span class="tool-tag">Lösungsmittel / Bremsenreiniger</span>
+          <span class="tool-tag">Schutzhandschuhe</span>
+          <span class="tool-tag">Schutzbrille</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt Anleitung</div>
+        <div class="steps-list">
+          <div class="step">
+            <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Rahmen reinigen</strong>
+              <p>Lege den Rahmen auf eine saubere, stabile Unterlage. Entferne Schmutz, alte Fette und Rostablagerungen gründlich mit Drahtbürste und Bremsenreiniger. Besondere Aufmerksamkeit gilt den Gewindebohrungen und Lagersitzen — diese müssen absolut sauber sein.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Sichtprüfung auf Risse und Verformungen</strong>
+              <p>Untersuche den kompletten Rahmen visuell auf Schweißnähte, Risse (besonders an den Gabelrohraufnahmen und Motoraufnahmen) sowie auf Verzug. Halte dazu eine Taschenlampe schräg an die Oberfläche. Ein gerissener Rahmen darf keinesfalls verbaut werden.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Alle Gewinde prüfen und nachschneiden</strong>
+              <p>Fahre mit dem passenden Gewindeschneider alle Gewindebohrungen nach: Motoraufnahmen M10×1,25, Schwingenlager M10, Ständeraufnahmen M8. Nur bei freiem Lauf des Gewindeschneiders ohne Kraft ist das Gewinde in Ordnung. Kontaminierte Gewinde brechen beim Anziehen ab.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Steuerkopflager-Aufnahme prüfen</strong>
+              <p>Der Steuerkopf (oben im Rahmen, dort wo die Gabel eingebaut wird) muss einen gleichmäßigen, glatten Lagersitz aufweisen. Prüfe mit dem Finger, ob Rillen oder Einlaufspuren vorhanden sind. Ist der Sitz beschädigt, muss er ausgebuchst oder der Rahmen getauscht werden.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Schwingenlager-Buchsen einsetzen</strong>
+              <p>Die zwei Buchsen für das Schwingengelenk werden in die entsprechenden Bohrungen am unteren hinteren Rahmen eingepresst. Wenn keine Presse vorhanden ist: Buchse auf einen Bolzen stecken, mit Unterlegscheibe und Mutter langsam einziehen — aber niemals mit Hammerschlägen einschlagen, da sonst die Buchse verformt wird.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Seitenständer montieren</strong>
+              <p>Schiebe den Seitenständer in seine Aufnahme am Rahmen (linke Seite, unterhalb des Motorbereichs). Stecke den Befestigungsbolzen ein und sichere ihn mit Splint oder Kronenmutter. Hänge die Rückzugfeder ein — sie muss straff sitzen und den Ständer sicher hochklappen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">7</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Hauptständer montieren</strong>
+              <p>Der Hauptständer wird auf der Querstrebe am hinteren Rahmenunterboden eingehängt. Bolzen einführen, mit Sicherungssplint sichern. Beide Rückzugfedern einhängen. Der Ständer muss beim Hochklappen spürbar einrasten — prüfe dies durch leichten Druck von hinten. Das Fahrzeug muss sicher stehen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">8</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Rahmen auf Hauptständer stellen und auf Planlage prüfen</strong>
+              <p>Stelle den Rahmen auf den Hauptständer. Lege die Wasserwaage auf die oberen Rahmenrohre. Der Rahmen sollte im Wesentlichen gerade stehen. Eine leichte Abweichung (bis 3 mm auf 1 m) ist tolerierbar, mehr deutet auf Verzug hin und muss von einem Fachmann beurteilt werden.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warnings-box">
+        <div class="subsection-title" style="color: var(--warn); margin-bottom: 16px;">⚠ Wichtige Hinweise</div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Gerissener Rahmen = sofortiger Stop.</strong> Ein Rahmenriss ist ein absolutes K.-O.-Kriterium. Kein gerissener Rahmen darf verbaut werden — Bruchgefahr bei Fahrt mit schwerwiegenden Folgen.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Gewinde nicht mit Gewalt bearbeiten.</strong> Klemmt der Gewindeschneider, liegt Verformung oder Korrosion vor. Niemals mit Kraft drehen — gebrochene Gewindeschneider sind schwer zu entfernen.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Bremsenreiniger nicht auf Lackflächen.</strong> Lösungsmittelhaltige Reiniger greifen Lack an. Nur auf blanke Metallflächen auftragen oder Lackflächen abdecken.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Ständerfedern sind stark vorgespannt.</strong> Beim Einhaken der Federn immer Spezialwerkzeug (Federspannhaken) nutzen — kein Schraubenzieher. Abrutschen kann schwere Handverletzungen verursachen.</span></div>
+      </div>
+
+      <div>
+        <div class="subsection-title">★ Kernprinzipien</div>
+        <div class="keyphrases">
+          <div class="keyphrase">Der Rahmen ist das Fundament — jeder Fehler hier zieht sich durch den gesamten Aufbau.</div>
+          <div class="keyphrase">Sauber beginnen heißt sicher enden: Keine Späne, kein Schmutz in Gewindebohrungen.</div>
+          <div class="keyphrase">Was nicht geprüft wurde, kann beim Fahren versagen — immer 100% sichergehen.</div>
+        </div>
+      </div>
+
+      <div class="quiz-box" id="quiz1">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 01: Rahmen</div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Warum müssen alle Gewindebohrungen im Rahmen nachgeschnitten werden?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q1-1" value="a"> Damit die Schrauben leichter herausgedreht werden können.</label>
+            <label class="quiz-option"><input type="radio" name="q1-1" value="b"> Damit Schrauben sicher eingreifen und beim Anziehen nicht abbrechen.</label>
+            <label class="quiz-option"><input type="radio" name="q1-1" value="c"> Damit der Rahmen leichter wird.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Was muss geprüft werden, wenn der Rahmen auf dem Hauptständer steht?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q1-2" value="a"> Die Farbe der Schweißnähte.</label>
+            <label class="quiz-option"><input type="radio" name="q1-2" value="b"> Die Planlage / ob der Rahmen gerade steht.</label>
+            <label class="quiz-option"><input type="radio" name="q1-2" value="c"> Das Gewicht des Rahmens.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Ein Riss in der Rahmenstruktur wird entdeckt. Was ist die richtige Maßnahme?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q1-3" value="a"> Den Riss mit Epoxidkleber füllen und weiterarbeiten.</label>
+            <label class="quiz-option"><input type="radio" name="q1-3" value="b"> Den Aufbau abbrechen — gerissene Rahmen sind sicherheitskritisch.</label>
+            <label class="quiz-option"><input type="radio" name="q1-3" value="c"> Den Rahmen trotzdem verwenden, aber nur langsam fahren.</label>
+          </div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz1', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz1-result"></div>
+      </div>
+
+    </div>
+  </article>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     KAPITEL 2 — VORDERGABEL
+══════════════════════════════════════════════ -->
+<section id="k2" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">02</div>
+      <div class="chapter-meta">
+        <h2>Vordergabel montieren</h2>
+        <div class="chapter-goal">Ziel: Die Teleskopgabel der S51 vollständig zusammenbauen, den Steuerkopf mit Lagern bestücken und die Gabel sicher im Rahmen befestigen.</div>
+      </div>
+    </div>
+
+    <div class="chapter-body">
+
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Gabelbrücke oben (Gabelkopf)</div>
+          <div class="part-item">Gabelbrücke unten (Gabelschaft)</div>
+          <div class="part-item">Gabelrohre links + rechts (Ø 30 mm)</div>
+          <div class="part-item">Gabelfedern (2×)</div>
+          <div class="part-item">Gabelöl (SAE 10W, ca. 120 ml je Seite)</div>
+          <div class="part-item">Gabeldichtringe (2×)</div>
+          <div class="part-item">Staubkappen für Gabelrohre (2×)</div>
+          <div class="part-item">Steuerkopf-Lagersatz (Konus + Schale, 2× je)</div>
+          <div class="part-item">Steuerkopfmutter mit Kontermutter</div>
+          <div class="part-item">Gabelklemmschrauben M8 (4×)</div>
+          <div class="part-item">Lenkerhalter / Lenkeraufnahme</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Benötigtes Werkzeug</div>
+        <div class="tools-list">
+          <span class="tool-tag">Hakenschlüssel für Steuerkopfmutter</span>
+          <span class="tool-tag">Steckschlüssel SW 22/27</span>
+          <span class="tool-tag">Innensechskant SW 5/6</span>
+          <span class="tool-tag">Gabelöl-Messbecher</span>
+          <span class="tool-tag">Drehmomentschlüssel</span>
+          <span class="tool-tag">Fett (Lagerfett / Wälzlagerfett)</span>
+          <span class="tool-tag">Trichter</span>
+          <span class="tool-tag">Lappen / Auffangwanne</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt Anleitung</div>
+        <div class="steps-list">
+          <div class="step">
+            <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Steuerkopflager vorbereiten</strong>
+              <p>Bestreiche die obere und untere Lagerschale im Steuerkopf des Rahmens mit Wälzlagerfett (erbsengroße Menge pro Schale, gleichmäßig verteilt). Das Fett hält die Lagerrollen bei der Montage an Ort und Stelle und schützt vor Korrosion.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Lagerkonen auf den Gabelschaft pressen</strong>
+              <p>Schiebe den unteren Lagerkonus auf den Gabelschaft (das lange Rohr der unteren Gabelbrücke). Er sitzt auf dem Schaft — mit einem Stück Rohr als Treibwerkzeug bündig und gerade eindrücken bis er auf dem Anschlag sitzt. Wichtig: Gerade aufsetzen, sonst verkanten die Lager.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Gabelschaft von unten durch den Steuerkopf führen</strong>
+              <p>Führe den Gabelschaft von unten durch den Rahmen-Steuerkopf. Der untere Lagerkegel greift dabei in die untere Lagerschale — halte den Schaft dabei senkrecht, damit keine Lagerrollen herausfallen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Oberes Lager und Mutter aufsetzen</strong>
+              <p>Setze den oberen Lagerkegel und die obere Schale von oben auf den Schaft. Schraube die Steuerkopfmutter händisch auf. Ziehe sie so weit an, bis kein Spiel mehr vorhanden ist, aber die Gabel noch leichtgängig dreht. Kontermutter aufschrauben und mit Hakenschlüssel gegenhalten.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Gabelrohre mit Dichtringen bestücken</strong>
+              <p>Schiebe einen neuen Dichtring und die Staubkappe von unten auf jedes Gabelrohr. Ringe müssen trocken und sauber auf dem Rohr sitzen — niemals einfetten, da der Dichtring dann nicht mehr abdichtet.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Gabelrohre in die Gabelbrücken einführen</strong>
+              <p>Schiebe die Gabelrohre von unten durch die untere Gabelbrücke. Führe die Gabelfedern von oben in die Rohre ein. Schraube die obere Gabelbrücke auf die Rohre. Achte darauf, dass beide Rohre gleich weit aus der oberen Brücke herausstehen (links = rechts, Abstand ca. 5–8 mm über Brückenkante).</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">7</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Gabelöl einfüllen</strong>
+              <p>Ziehe die Gabelklemmschrauben noch nicht fest an. Befülle jedes Gabelrohr von oben mit genau 120 ml SAE-10W-Gabelöl (Messbecher verwenden). Danach Gabelrohr mehrmals komprimieren, damit keine Luftblasen verbleiben. Evtl. etwas nachfüllen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">8</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Alle Schrauben festziehen</strong>
+              <p>Klemme jetzt die Gabelrohre in beiden Brücken fest: Klemmschrauben kreuzweise anziehen, Anzugsmoment 20 Nm. Prüfe abschließend die Leichtgängigkeit der Gabel: Drücke sie mehrmals ein — sie muss gleichmäßig federn, ohne zu haken oder zu ruckeln.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warnings-box">
+        <div class="subsection-title" style="color: var(--warn); margin-bottom: 16px;">⚠ Wichtige Hinweise</div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Steuerkopflager nicht zu fest anziehen.</strong> Zu straffes Lager führt zu schwerem Lenken und kann bei Geradeausfahrt zum unkontrollierten Einlenken führen. Der richtige Anschlag: kein Lagerspiel, aber freie Drehbarkeit.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Gabelöl-Menge exakt einhalten.</strong> Zu viel Öl führt bei Kompression zu hydraulischem Schlag und Dichtringsschäden. Zu wenig Öl bedeutet mangelnde Dämpfung.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Dichtringe niemals nachschlagen.</strong> Werden die Dichtringe beim Einführen des Gabelrohres beschädigt, leckt die Gabel sofort. Rohr langsam und gerade einführen.</span></div>
+      </div>
+
+      <div>
+        <div class="subsection-title">★ Kernprinzipien</div>
+        <div class="keyphrases">
+          <div class="keyphrase">Steuerkopflager: Kein Spiel, aber volle Leichtgängigkeit — der schmale Grat zwischen zu locker und zu fest.</div>
+          <div class="keyphrase">Gabelöl ist kein Schmieröl — es ist das Herz der Dämpfung. Menge exakt messen.</div>
+        </div>
+      </div>
+
+      <div class="quiz-box" id="quiz2">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 02: Gabel</div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Wie viel Gabelöl wird pro Gabelholm bei der S51 eingefüllt?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q2-1" value="a"> Etwa 50 ml SAE 30.</label>
+            <label class="quiz-option"><input type="radio" name="q2-1" value="b"> Etwa 120 ml SAE 10W.</label>
+            <label class="quiz-option"><input type="radio" name="q2-1" value="c"> Etwa 250 ml SAE 5W.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Warum darf der Gabeldichtring beim Einbau nicht eingefettet werden?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q2-2" value="a"> Weil Fett das Gabelöl verunreinigt und die Leistung mindert.</label>
+            <label class="quiz-option"><input type="radio" name="q2-2" value="b"> Weil Fett die Dichtwirkung des Ringes aufhebt und die Gabel leckt.</label>
+            <label class="quiz-option"><input type="radio" name="q2-2" value="c"> Weil der Ring dann nicht mehr entfernt werden kann.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Wie erkennst du ein korrekt eingestelltes Steuerkopflager?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q2-3" value="a"> Das Lenken ist sehr schwer und erfordert deutlich Kraft.</label>
+            <label class="quiz-option"><input type="radio" name="q2-3" value="b"> Kein Lagerspiel, aber die Gabel dreht sich ohne Kraftaufwand frei.</label>
+            <label class="quiz-option"><input type="radio" name="q2-3" value="c"> Man spürt leichtes Spiel — das ist normal und gewünscht.</label>
+          </div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz2', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz2-result"></div>
+      </div>
+
+    </div>
+  </article>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     KAPITEL 3 — SCHWINGE & FEDERBEIN
+══════════════════════════════════════════════ -->
+<section id="k3" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">03</div>
+      <div class="chapter-meta">
+        <h2>Schwinge & Federbein montieren</h2>
+        <div class="chapter-goal">Ziel: Die hintere Schwinge mit Schwingenbolzen am Rahmen befestigen und das Federbein als Verbindung zwischen Schwinge und Rahmen einbauen, sodass das Hinterrad gefedert ist.</div>
+      </div>
+    </div>
+
+    <div class="chapter-body">
+
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Schwinge (Hinterradschwinge S51)</div>
+          <div class="part-item">Schwingenbolzen M10×1,25, L=130 mm</div>
+          <div class="part-item">Schwingenlager-Buchsen (2×, bereits im Rahmen)</div>
+          <div class="part-item">Schwingenbolzen-Mutter M10 gesichert</div>
+          <div class="part-item">Beilagscheiben für Schwinge</div>
+          <div class="part-item">Federbein (Stoßdämpfer hinten)</div>
+          <div class="part-item">Federbein-Befestigungsbolzen oben + unten</div>
+          <div class="part-item">Selbstsichernde Muttern M10 (4×)</div>
+          <div class="part-item">Kettenführungsblech</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Benötigtes Werkzeug</div>
+        <div class="tools-list">
+          <span class="tool-tag">Ringschlüssel SW 17</span>
+          <span class="tool-tag">Drehmomentschlüssel</span>
+          <span class="tool-tag">Gummihammer</span>
+          <span class="tool-tag">Treibdorn (Metall)</span>
+          <span class="tool-tag">Sicherungsring-Zange</span>
+          <span class="tool-tag">Wälzlagerfett</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt Anleitung</div>
+        <div class="steps-list">
+          <div class="step">
+            <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Schwinge vorbereiten</strong>
+              <p>Prüfe die Schwinge auf Risse und Verzug (wie beim Rahmen). Die Aufnahmebohrungen müssen rund und sauber sein. Entferne Rost mit Drahtbürste. Schmierstellen (Schwingenbolzen-Bohrung) leicht mit Lagerfett benetzen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Schwinge am Rahmen ausrichten</strong>
+              <p>Halte die Schwinge zwischen die Buchsen am Rahmen. Die Bohrungen der Schwinge und der Buchsen müssen fluchten (exakt deckungsgleich sein). Drehe die Schwinge ggf. leicht, bis die Bohrungen übereinstimmen. Halte die Position mit einer Hand.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Schwingenbolzen einführen</strong>
+              <p>Führe den eingefetteten Schwingenbolzen von der rechten Seite durch Buchse, Schwinge und die gegenüberliegende Buchse. Der Bolzen muss bündig und leichtgängig durchgleiten. Klemmt er, nie mit dem Hammer einschlagen — Ausrichtung neu prüfen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Schwingenbolzen sichern</strong>
+              <p>Auf der linken Seite Beilagscheibe und Sicherungsmutter aufschrauben. Anzugsmoment: 35 Nm. Prüfe nach dem Festziehen, ob die Schwinge noch frei beweglich ist (auf und ab schwingen lassen) — sie darf nicht verklemmt oder schwergängig sein.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Federbein oben am Rahmen befestigen</strong>
+              <p>Setze das obere Auge des Federbeins in die dafür vorgesehene Aufnahme am Rahmen (oberhalb und hinter dem Motorbereich, rechte Seite). Bolzen einführen, Beilagscheibe und selbstsichernde Mutter aufschrauben. Nur handfest anziehen — noch nicht festziehen.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Federbein unten an der Schwinge befestigen</strong>
+              <p>Drücke die Schwinge leicht nach unten (Federbein komprimieren) und führe den unteren Bolzen durch das Schwingen-Auge und das untere Federbein-Auge. Mutter aufschrauben. Jetzt beide Bolzen (oben + unten) auf 35 Nm festziehen. Das Federbein ist nun vorgespannt.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-left"><div class="step-num">7</div><div class="step-line"></div></div>
+            <div class="step-content">
+              <strong>Funktion prüfen</strong>
+              <p>Drücke die Schwinge von Hand nach unten und lasse sie los. Sie muss gleichmäßig zurückfedern, ohne zu rattern oder zu quietschen. Kratzen deutet auf fehlende Beilagscheiben oder falsche Ausrichtung hin.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warnings-box">
+        <div class="subsection-title" style="color: var(--warn); margin-bottom: 16px;">⚠ Wichtige Hinweise</div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Schwingenbolzen nie einschlagen.</strong> Wird der Bolzen mit Gewalt eingeschlagen, werden die Buchsen zerstört. Im Zweifel Ausrichtung neu kontrollieren.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Selbstsichernde Muttern nur einmal verwenden.</strong> Der Nylonring im Mutternkern verliert nach einmaligem Anziehen seine Sicherungswirkung. Alte selbstsichernde Muttern immer ersetzen.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Schwinge muss leichtgängig sein.</strong> Eine verklemmte Schwinge (zu hohe Reibung) verhält sich wie keine Federung — das Fahrzeug federt nicht mehr korrekt und wird instabil.</span></div>
+      </div>
+
+      <div>
+        <div class="subsection-title">★ Kernprinzipien</div>
+        <div class="keyphrases">
+          <div class="keyphrase">Selbstsichernde Muttern sind Einwegteile — jede Demontage erfordert neue Muttern.</div>
+          <div class="keyphrase">Leichtgängigkeit nach dem Einbau ist Pflicht — was klemmt, federt nicht.</div>
+        </div>
+      </div>
+
+      <div class="quiz-box" id="quiz3">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 03: Schwinge</div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Warum muss die Schwinge nach dem Einbau leichtgängig bleiben?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q3-1" value="a"> Damit das Hinterrad leichter ausgebaut werden kann.</label>
+            <label class="quiz-option"><input type="radio" name="q3-1" value="b"> Damit das Federbein korrekt arbeiten kann und das Fahrzeug stabil bleibt.</label>
+            <label class="quiz-option"><input type="radio" name="q3-1" value="c"> Damit der Schwingenbolzen nicht rostet.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Warum dürfen selbstsichernde Muttern nicht wiederverwendet werden?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q3-2" value="a"> Weil sie sich dann nicht mehr aufschrauben lassen.</label>
+            <label class="quiz-option"><input type="radio" name="q3-2" value="b"> Weil der Nylonring nach einmaligem Anziehen seine Sicherungswirkung verliert.</label>
+            <label class="quiz-option"><input type="radio" name="q3-2" value="c"> Weil sie zu schwer für eine Wiederverwendung sind.</label>
+          </div>
+        </div>
+
+        <div class="quiz-question">
+          <div class="quiz-q-text"><span class="quiz-q-num">Q3</span> In welcher Reihenfolge wird das Federbein befestigt?</div>
+          <div class="quiz-options">
+            <label class="quiz-option"><input type="radio" name="q3-3" value="a"> Zuerst unten an der Schwinge, dann oben am Rahmen.</label>
+            <label class="quiz-option"><input type="radio" name="q3-3" value="b"> Zuerst oben am Rahmen (handfest), dann unten an der Schwinge, dann alles festziehen.</label>
+            <label class="quiz-option"><input type="radio" name="q3-3" value="c"> Beide Bolzen gleichzeitig einführen und gleichzeitig anziehen.</label>
+          </div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz3', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz3-result"></div>
+      </div>
+
+    </div>
+  </article>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     KAPITEL 4–10: KOMPAKT
+══════════════════════════════════════════════ -->
+<section id="k4" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">04</div>
+      <div class="chapter-meta">
+        <h2>Räder & Reifen montieren</h2>
+        <div class="chapter-goal">Ziel: Vorder- und Hinterrad mit Reifen und Schläuchen bestücken und am Fahrzeug befestigen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Vorderrad-Felge 2.15×16 Zoll</div>
+          <div class="part-item">Hinterrad-Felge 2.15×16 Zoll</div>
+          <div class="part-item">Reifen 2.75–16 (2×)</div>
+          <div class="part-item">Schläuche mit Schraderventil (2×)</div>
+          <div class="part-item">Vorderrad-Achse M10</div>
+          <div class="part-item">Hinterrad-Achse M10</div>
+          <div class="part-item">Achsmuttern mit Sicherung</div>
+          <div class="part-item">Kettenschloss + Kette 1/2″×1/8″</div>
+        </div>
+      </div>
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Schlauch in Reifen einlegen</strong><p>Schlauch leicht aufpumpen (ca. 0,3 bar), damit er sich nicht faltet. In den Reifen einlegen, Ventil durch Felgenloch führen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Reifen auf Felge ziehen</strong><p>Reifen mit Reifenhebern auf die Felge montieren — kein Metallhebel direkt am Schlauch ansetzen, um Durchstechung zu vermeiden. Reifenwulst in die Mitte der Felge (Mulde) drücken, dann auf der gegenüberliegenden Seite mit dem Hebel über die Felgenkante heben.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Reifen aufpumpen und Sitz prüfen</strong><p>Reifen auf Betriebsdruck aufpumpen (ca. 2,0 bar vorn, 2,5 bar hinten). Sicherstellen, dass der Wulst ringsum gleichmäßig auf der Felge sitzt (Zentrier-Rille muss gleichmäßig sichtbar sein).</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Vorderrad einsetzen</strong><p>Vorderrad zwischen die Gabelholme einsetzen, Achse von rechts durchführen, Abstandshalter korrekt positionieren, Achsmutter auf 35 Nm anziehen. Rad muss leichtgängig drehen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-content"><strong>Hinterrad und Kette montieren</strong><p>Hinterrad in die Schwinge einsetzen. Kette über Kettenblatt (Motor) und Kettenritzel (Hinterrad) legen, Kettenschloss einsetzen (Schloss-Öffnung in Fahrtrichtung zeigend). Achse einführen, Kettendurchhang auf 10–15 mm einstellen, dann festziehen.</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Kettenschloss-Richtung beachten:</strong> Die geschlossene Seite des Schlosses muss in Fahrtrichtung zeigen, sonst kann es sich öffnen.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Kettendurchhang kontrollieren:</strong> Zu stramme Kette überlastet Lager und reißt. Zu lose Kette springt ab.</span></div>
+      </div>
+      <div class="quiz-box" id="quiz4">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 04</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Wie wird der Schlauch vor der Reifenmontage vorbereitet?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q4-1" value="a"> Trocken und luftleer einlegen.</label><label class="quiz-option"><input type="radio" name="q4-1" value="b"> Leicht aufpumpen (~0,3 bar), damit er sich nicht faltet.</label><label class="quiz-option"><input type="radio" name="q4-1" value="c"> Mit Talkumpuder bestreuen und dann einlegen.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> In welche Richtung muss die offene Seite des Kettenschlosses zeigen?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q4-2" value="a"> Entgegen der Fahrtrichtung.</label><label class="quiz-option"><input type="radio" name="q4-2" value="b"> In Fahrtrichtung.</label><label class="quiz-option"><input type="radio" name="q4-2" value="c"> Nach oben.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Welcher Kettendurchhang ist korrekt?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q4-3" value="a"> 0–5 mm (möglichst stramm).</label><label class="quiz-option"><input type="radio" name="q4-3" value="b"> 10–15 mm.</label><label class="quiz-option"><input type="radio" name="q4-3" value="c"> 30–40 mm.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz4', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz4-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k5" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">05</div>
+      <div class="chapter-meta">
+        <h2>Bremsen einbauen</h2>
+        <div class="chapter-goal">Ziel: Vorder- und Hinterradbremse (Simplex-Trommelbremsen) montieren, Bremsseile verlegen und einstellen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Vorderrad-Bremsankerplatte mit Backen</div>
+          <div class="part-item">Hinterrad-Bremsankerplatte mit Backen</div>
+          <div class="part-item">Bremsbacken-Federn (je 2×)</div>
+          <div class="part-item">Nockenwellen für Bremsnocken</div>
+          <div class="part-item">Bremsseil vorn + hinten</div>
+          <div class="part-item">Bowdenzug-Hülle vorn + hinten</div>
+          <div class="part-item">Bremshebel Lenker (vorn)</div>
+          <div class="part-item">Bremspedal-Rückstellfeder (hinten)</div>
+        </div>
+      </div>
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Bremsbacken auf Ankerplatte montieren</strong><p>Bremsbacken auf die Nockenwelle und den Ankerbolzen der Ankerplatte aufsetzen. Rückzugfedern einhängen. Backen müssen sich frei spreizen und von den Federn sicher zurückgezogen werden.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Ankerplatten in die Radnaben einsetzen</strong><p>Bremsankerplatten in die Radnaben einsetzen (die Bremsbacken greifen in die Bremstrommel in der Radnabe). Ankerplatte am Gabelholm bzw. an der Schwinge mit Gegennase fixieren.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Bremsseile verlegen</strong><p>Bowdenzug-Hüllen in die Rahmenhalterungen einclipsen. Bremsseile durch die Hüllen führen, Nippel in den Bremshebel/Nockenwelle einsetzen. Seile locker verlegen — keine Knicke, kein Schleifen an beweglichen Teilen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Bremsen einstellen</strong><p>Bremsen über die Einstellschrauben am Bowdenzug so einstellen, dass bei ca. 2/3 Hebelweg die Bremse voll greift. Handtest: Das blockierte Rad darf sich nicht drehen. Freizügigkeitstest: Im Normalbetrieb schleifen die Backen nicht (Rad dreht sich frei).</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Bremsbacken nicht mit Öl oder Fett kontaminieren</strong> — einmal verölt müssen sie ersetzt werden.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Bremswirkung immer im Stand testen, bevor gefahren wird.</strong></span></div>
+      </div>
+      <div class="quiz-box" id="quiz5">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 05</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Was passiert, wenn Öl auf die Bremsbacken gelangt?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q5-1" value="a"> Die Bremse wirkt besser.</label><label class="quiz-option"><input type="radio" name="q5-1" value="b"> Die Backen müssen ersetzt werden — Bremswirkung ist stark reduziert.</label><label class="quiz-option"><input type="radio" name="q5-1" value="c"> Nichts, Öl hat keinen Einfluss.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Wann soll die volle Bremswirkung einsetzen?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q5-2" value="a"> Bei maximalem Hebelweg (ganz durchgedrückt).</label><label class="quiz-option"><input type="radio" name="q5-2" value="b"> Bei ca. 2/3 des Hebelwegs.</label><label class="quiz-option"><input type="radio" name="q5-2" value="c"> Bereits bei minimalem Hebelweg.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Wie werden Bremsseile korrekt verlegt?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q5-3" value="a"> Mit engen Bögen und Knicken zur Platzersparnis.</label><label class="quiz-option"><input type="radio" name="q5-3" value="b"> Locker und ohne Knicke, nicht an beweglichen Teilen schleifend.</label><label class="quiz-option"><input type="radio" name="q5-3" value="c"> Direkt an der Zündspule entlang.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz5', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz5-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k6" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">06</div>
+      <div class="chapter-meta">
+        <h2>Motor einsetzen & befestigen</h2>
+        <div class="chapter-goal">Ziel: Den S51-Motor (50-ccm-Einzylinder-Zweitakter) in den Rahmen einbauen und alle Befestigungsschrauben korrekt anziehen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div>
+        <div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Motor S51 (komplett)</div>
+          <div class="part-item">Motoraufnahmebolzen M10×1,25 (2×)</div>
+          <div class="part-item">Motorsockelschrauben unten (2×)</div>
+          <div class="part-item">Motorhalter-Gummis (4×)</div>
+          <div class="part-item">Beilagscheiben M10</div>
+          <div class="part-item">Zweitaktöl (für Erstbetrieb)</div>
+          <div class="part-item">Neue Kupferdichtung Zylinderkopf</div>
+        </div>
+      </div>
+      <div>
+        <div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Motor prüfen</strong><p>Motorkurbelwelle von Hand drehen: Sie muss leichtgängig sein. Überprüfe alle Schrauben auf festen Sitz. Stelle sicher, dass Zylinder und Kopf fest verbaut sind (keine gerissenen Dichtungen).</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Motor in den Rahmen einsetzen</strong><p>Motor von unten in den Rahmen einsetzen, sodass die Motoraufnahmeaugen mit den Rahmenbohrungen fluchten. Am besten zu zweit: Eine Person hält den Motor, die andere führt die Bolzen ein.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Gummi-Motorlager einsetzen</strong><p>Gummipuffer zwischen Motor und Rahmenaufnahme einlegen (dämpft Vibrationen). Bolzen einführen und Muttern handfest aufschrauben.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Alle Motorschrauben festziehen</strong><p>Motorbolzen oben und unten auf 40 Nm anziehen. Reihenfolge: Erst oben, dann unten. Prüfe, ob der Motor fest sitzt und nicht wackelt.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-content"><strong>Kette auf Kettenblatt legen</strong><p>Kette über das Motorritzel legen (Kettenblatt ist auf der linken Motorseite). Kettenspannung wird erst nach Hinterradmontage final eingestellt.</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Zweitaktmotor braucht Kraftstoff-Öl-Gemisch</strong> (1:50) — kein Reinbenzin, da sonst der Motor binnen Sekunden festläuft.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Niemals ohne Zündkerze anlassen</strong> — Kompression fehlt und Kraftstoff gelangt unkontrolliert in den Brennraum.</span></div>
+      </div>
+      <div class="quiz-box" id="quiz6">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 06</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Warum braucht der S51-Zweitaktmotor ein Kraftstoff-Öl-Gemisch?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q6-1" value="a"> Weil Reinbenzin zu teuer ist.</label><label class="quiz-option"><input type="radio" name="q6-1" value="b"> Weil der Motor keine separate Ölversorgung hat — das Öl schmiert über das Gemisch.</label><label class="quiz-option"><input type="radio" name="q6-1" value="c"> Weil der Motor sonst zu heiß wird.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> In welcher Reihenfolge werden die Motorschrauben angezogen?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q6-2" value="a"> Egal — alle gleichzeitig.</label><label class="quiz-option"><input type="radio" name="q6-2" value="b"> Erst oben, dann unten.</label><label class="quiz-option"><input type="radio" name="q6-2" value="c"> Erst unten, dann oben.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Was zeigen die Gummi-Motorlager an?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q6-3" value="a"> Sie verhindern, dass der Motor herausfällt.</label><label class="quiz-option"><input type="radio" name="q6-3" value="b"> Sie dämpfen Motorvibrationen und schützen Rahmen und Anbauteile.</label><label class="quiz-option"><input type="radio" name="q6-3" value="c"> Sie sind nur optischer Natur.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz6', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz6-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k7" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">07</div>
+      <div class="chapter-meta">
+        <h2>Vergaser montieren & einstellen</h2>
+        <div class="chapter-goal">Ziel: Den Vergaser (BVF 16N3–1 oder gleichwertig) am Motoreinlass befestigen und Grundeinstellung vornehmen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div><div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Vergaser BVF 16N3-1</div>
+          <div class="part-item">Ansaugstutzen mit Dichtung</div>
+          <div class="part-item">Luftfilterkasten + Filtereinsatz</div>
+          <div class="part-item">Gasdrehgriff + Gaszug</div>
+          <div class="part-item">Vergaser-Befestigungsschellen (2×)</div>
+          <div class="part-item">Dichtring Ansaugstutzen</div>
+        </div>
+      </div>
+      <div><div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Ansaugstutzen am Motor befestigen</strong><p>Neue Dichtung auf den Motoransaugkanal legen, Ansaugstutzen aufsetzen und verschrauben. Dichtheit ist kritisch — jede Falschluft macht den Motor schwer einstellbar.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div></div><div class="step-content"><strong>Vergaser auf Ansaugstutzen setzen</strong><p>Vergaser auf Ansaugstutzen schieben, Schelle positionieren und festziehen (ca. 3 Nm — kein Überziehen, da Gummi reißt). Vergaser muss senkrecht stehen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Gaszug einsetzen</strong><p>Gaszug durch den Vergaserdeckel führen, Nippel in den Gasschieber einsetzen. Deckel verschrauben. Gaszug so einstellen, dass der Schieber im Leerlauf vollständig geschlossen ist und am Anschlag öffnet.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Grundeinstellung: Leerlaufschraube und Gemisch</strong><p>Leerlaufdrehzahlschraube (seitlich am Vergaser) auf Ausgangsstellung bringen: 1,5 Umdrehungen herausdrehen. Gemisch-Einstellschraube: 1,5 Umdrehungen herausdrehen. Feinabstimmung erst beim laufenden Motor.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-content"><strong>Luftfilter anbauen</strong><p>Luftfilterkasten auf die Vergasereingangsseite setzen und verschrauben. Filtereinsatz muss sauber sitzen — kein Direktansaugen ohne Filter, da Motorverschleiß dramatisch ansteigt.</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Falschluft am Ansaugstutzen ist der häufigste Fehler beim S51-Aufbau.</strong> Undichtigkeiten erzeugen mageres Gemisch, Überhitzung und Motorschäden. Alle Dichtflächen müssen makellos sein.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Niemals ohne Luftfilter betreiben</strong> — selbst kurze Testläufe ohne Filter erhöhen den Zylinderverschleiß erheblich.</span></div>
+      </div>
+      <div class="quiz-box" id="quiz7">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 07</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Was verursacht Falschluft am Ansaugstutzen?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q7-1" value="a"> Bessere Leistung durch mehr Sauerstoff.</label><label class="quiz-option"><input type="radio" name="q7-1" value="b"> Mageres Gemisch, Überhitzung und Motorschäden.</label><label class="quiz-option"><input type="radio" name="q7-1" value="c"> Erhöhten Kraftstoffverbrauch.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Wie viele Umdrehungen heraus ist die Grundeinstellung der Leerlaufschraube?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q7-2" value="a"> 0,5 Umdrehungen.</label><label class="quiz-option"><input type="radio" name="q7-2" value="b"> 1,5 Umdrehungen.</label><label class="quiz-option"><input type="radio" name="q7-2" value="c"> 3 Umdrehungen.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Warum darf der Motor nicht ohne Luftfilter betrieben werden?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q7-3" value="a"> Der Motor springt sonst nicht an.</label><label class="quiz-option"><input type="radio" name="q7-3" value="b"> Staub und Partikel gelangen in den Zylinder und erhöhen den Verschleiß stark.</label><label class="quiz-option"><input type="radio" name="q7-3" value="c"> Der Vergaser überhitzt ohne Filter.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz7', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz7-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k8" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">08</div>
+      <div class="chapter-meta">
+        <h2>Auspuffanlage montieren</h2>
+        <div class="chapter-goal">Ziel: Krümmer und Endrohr/Schalldämpfer am Motor befestigen und sicher am Rahmen abstützen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div><div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Auspuffkrümmer</div>
+          <div class="part-item">Auspuffdichtung (Kupfer- oder Grafit-Dichtring)</div>
+          <div class="part-item">Schalldämpfer / Endtopf</div>
+          <div class="part-item">Krümmer-Überwurfmutter M26×1,5</div>
+          <div class="part-item">Auspuffschelle für Endrohr</div>
+          <div class="part-item">Auspuffhalter-Gummi am Rahmen</div>
+          <div class="part-item">Hochtemperaturdichtmasse (optional)</div>
+        </div>
+      </div>
+      <div><div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Auspuffdichtung einlegen</strong><p>Neue Dichtung in den Auspuffkanal des Zylinders einlegen. Alte Dichtungen nie wiederverwenden — Undichtigkeiten erzeugen Lärm und beeinträchtigen die Motorleistung erheblich.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Krümmer einschrauben</strong><p>Krümmer auf die Dichtung setzen, Überwurfmutter aufschrauben. Mutter schrittweise und kreuzförmig anziehen — Anzugsmoment ca. 20 Nm. Keine Winkelkraftanstrengung, da Alugewinde im Zylinder empfindlich ist.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Schalldämpfer aufsetzen</strong><p>Endrohr auf den Krümmer schieben, Schelle positionieren (noch nicht festziehen). Auspuff am Rahmen-Gummihalter einhängen. Erst wenn alles ausgerichtet ist, Schelle auf 5–8 Nm festziehen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Ausrichtung und Sicherheit prüfen</strong><p>Der Auspuff darf keine Karosserieteile, Kabel oder Kunststoffteile berühren. Mindestabstand zu brennbaren Teilen: 30 mm. Kabel nie am Auspuff entlangführen.</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Auspuff wird extrem heiß (400–600°C).</strong> Nach dem ersten Anlassen nie berühren. Kinder und Haustiere fernhalten. Brandschutz beachten.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Falsch montierter Auspuff beeinflusst die Motorleistung massiv</strong> — beim Zweitakter ist die Auspuffabstimmung Teil des Motorsystems.</span></div>
+      </div>
+      <div class="quiz-box" id="quiz8">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 08</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Warum muss die Auspuffdichtung immer neu sein?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q8-1" value="a"> Alte Dichtungen werden zu hart und dichten nicht mehr ab — Undichtigkeiten entstehen.</label><label class="quiz-option"><input type="radio" name="q8-1" value="b"> Neue Dichtungen sehen besser aus.</label><label class="quiz-option"><input type="radio" name="q8-1" value="c"> Alte Dichtungen passen nicht mehr ins Gewinde.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Wie heiß wird ein Auspuff im Betrieb?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q8-2" value="a"> Etwa 50–100°C.</label><label class="quiz-option"><input type="radio" name="q8-2" value="b"> Etwa 400–600°C.</label><label class="quiz-option"><input type="radio" name="q8-2" value="c"> Etwa 200°C.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Warum ist die Auspuffabstimmung beim Zweitakter so wichtig?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q8-3" value="a"> Weil ein lauterer Auspuff mehr Leistung produziert.</label><label class="quiz-option"><input type="radio" name="q8-3" value="b"> Weil Auspuffdruckwellen die Gaswechselvorgänge im Zylinder aktiv beeinflussen.</label><label class="quiz-option"><input type="radio" name="q8-3" value="c"> Weil ein kürzerer Auspuff weniger wiegt.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz8', ['a','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz8-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k9" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">09</div>
+      <div class="chapter-meta">
+        <h2>Kraftstofftank montieren</h2>
+        <div class="chapter-goal">Ziel: Den Tank am Rahmen befestigen, Kraftstoffhahn und Benzinschlauch anschließen und auf Dichtheit prüfen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div><div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Kraftstofftank S51</div>
+          <div class="part-item">Tank-Gummipolster (2–4×)</div>
+          <div class="part-item">Tank-Befestigungsschrauben</div>
+          <div class="part-item">Kraftstoffhahn (mit Reserve-Stellung)</div>
+          <div class="part-item">Kraftstoffschlauch 6 mm innen</div>
+          <div class="part-item">Schlauchschellen (2×)</div>
+          <div class="part-item">Tankdeckel mit Belüftungsbohrung</div>
+        </div>
+      </div>
+      <div><div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Kraftstoffhahn einbauen</strong><p>Kraftstoffhahn in die Tankbohrung einschrauben. Neue Dichtung verwenden. Hahn auf "zu" stellen, dann in den Tank einschrauben. Anzugsmoment: handfest + ¼ Umdrehung — kein Überziehen, da Gewinde im Blech-Tank sitzt.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Gummipolster aufsetzen</strong><p>Gummipolster auf die Rahmenauflager setzen. Sie verhindern Lackschäden und dämpfen Vibrationen. Tank auf die Polster setzen und ausrichten.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Tank befestigen</strong><p>Tank über die Halteschrauben oder die Tankklaue am Rahmen fixieren. Schrauben auf 10 Nm anziehen — mehr schadet den Gummipolstern.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Kraftstoffschlauch anschließen</strong><p>Kraftstoffschlauch (6 mm Innen-Ø) auf Hahn und Vergasereingang aufschieben, je eine Schlauchschelle anbringen und festziehen. Keine Knicke im Schlauch. Schlauch darf keine heißen Teile berühren.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-content"><strong>Dichtheit prüfen</strong><p>Tank mit ca. 0,5 Liter Kraftstoff-Öl-Gemisch befüllen. Hahn öffnen. Alle Verbindungsstellen auf Tropfen oder feuchte Stellen prüfen. Bei Undichtigkeiten sofort Kraftstoff entfernen und Ursache beheben.</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Kraftstoff ist hochentzündlich.</strong> Keine Flammen oder Funken in der Nähe. Nicht im geschlossenen Raum arbeiten. Benzin sofort aufwischen, wenn es austritt.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Tankdeckel-Belüftung prüfen.</strong> Ein verstopfter Tankdeckel erzeugt Unterdruck im Tank — der Motor stirbt nach kurzer Fahrt ab (häufiger Fehler).</span></div>
+      </div>
+      <div class="quiz-box" id="quiz9">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 09</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Warum muss der Tankdeckel eine Belüftungsbohrung haben?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q9-1" value="a"> Damit Dampf entweichen kann und die Kraftstoffzufuhr nicht durch Unterdruck unterbrochen wird.</label><label class="quiz-option"><input type="radio" name="q9-1" value="b"> Damit Wasser in den Tank kommt.</label><label class="quiz-option"><input type="radio" name="q9-1" value="c"> Damit der Tank leichter ist.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Was ist beim Kraftstoffhahn-Anzugsmoment zu beachten?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q9-2" value="a"> So fest wie möglich anziehen.</label><label class="quiz-option"><input type="radio" name="q9-2" value="b"> Handfest + ¼ Umdrehung — das Gewinde sitzt im dünnen Tankblech.</label><label class="quiz-option"><input type="radio" name="q9-2" value">c"> Nur handfest anziehen, kein Werkzeug.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Was ist sofort zu tun, wenn beim Dichtigkeitstest Kraftstoff austritt?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q9-3" value="a"> Motor anlassen und schauen ob es sich verteilt.</label><label class="quiz-option"><input type="radio" name="q9-3" value="b"> Kraftstoff sofort entfernen, alle Zündquellen eliminieren, Ursache beheben.</label><label class="quiz-option"><input type="radio" name="q9-3" value="c"> Die undichte Stelle mit Klebeband abdichten.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz9', ['a','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz9-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="k10" class="anchor-target">
+  <article class="chapter">
+    <div class="chapter-header">
+      <div class="chapter-num-big">10</div>
+      <div class="chapter-meta">
+        <h2>Elektrik & Kabelbaum verlegen</h2>
+        <div class="chapter-goal">Ziel: Den kompletten Kabelbaum der S51 verlegen, alle Komponenten anschließen und die Grundfunktionen der Elektrik herstellen.</div>
+      </div>
+    </div>
+    <div class="chapter-body">
+      <div><div class="subsection-title">Benötigte Teile</div>
+        <div class="parts-grid">
+          <div class="part-item">Kabelbaum S51 (Satz)</div>
+          <div class="part-item">Lichtmaschine (bereits am Motor)</div>
+          <div class="part-item">Zündspule</div>
+          <div class="part-item">Scheinwerfer 6V/25W</div>
+          <div class="part-item">Rücklicht 6V/5W</div>
+          <div class="part-item">Blinker vorn + hinten (4×)</div>
+          <div class="part-item">Hupe 6V</div>
+          <div class="part-item">Lichtschalter</div>
+          <div class="part-item">Kabelschellen und Kabelbinder</div>
+        </div>
+      </div>
+      <div><div class="subsection-title">Schritt-für-Schritt (Kurzform)</div>
+        <div class="steps-list">
+          <div class="step"><div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div><div class="step-content"><strong>Schaltplan studieren</strong><p>Vor Beginn den originalen S51-Schaltplan ausdrucken oder griffbereit halten. Beim S51 sind alle Leitungen farbkodiert — diese Farben entsprechen dem DDR-Norm-Farbcode. Ohne Schaltplan nicht beginnen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div><div class="step-content"><strong>Kabelbaum verlegen</strong><p>Kabelbaum entlang des Rahmens führen, beginnend am Lenkerkopf. Kabel mit Kabelbindern oder Schellen am Rahmen fixieren — keine losen, herunterhängenden Kabel. Abstand zu Auspuff und beweglichen Teilen mindestens 30 mm.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div><div class="step-content"><strong>Zündspule und Lichtmaschine anschließen</strong><p>Zündspule am Rahmen befestigen, Kabel gemäß Schaltplan anschließen (Primärwicklung: Kabel von Unterbrecherkontakt; Sekundärwicklung: zur Zündkerze). Lichtmaschinen-Kabel an Stecker anschließen.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">4</div><div class="step-line"></div></div><div class="step-content"><strong>Beleuchtung anschließen</strong><p>Scheinwerfer: Kabel laut Schaltplan (Abblend, Fernlicht, Masse). Rücklicht und Blinker: gemäß Schaltplan. Alle Steckverbindungen fest einrasten lassen. Masse-Verbindung (grünes Kabel) zuletzt kontrollieren — eine schlechte Masse ist die häufigste Ursache für Elektrikprobleme.</p></div></div>
+          <div class="step"><div class="step-left"><div class="step-num">5</div><div class="step-line"></div></div><div class="step-content"><strong>Funktionstest</strong><p>Vor dem Motorstart alle Lichter prüfen: Licht an/aus, Blinker links/rechts, Bremslicht. Einen einfachen Test ohne Motor ist möglich, wenn man das Hinterrad antreibt (Lichtmaschine erzeugt Strom).</p></div></div>
+        </div>
+      </div>
+      <div class="warnings-box">
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Nie raten — immer Schaltplan verwenden.</strong> Falsch angeschlossene Kabel können Kurzschlüsse verursachen, Kabel beschädigen oder die Lichtmaschine zerstören.</span></div>
+        <div class="warning-item"><span class="warning-icon">▲</span><span><strong>Kabel nie an Auspuffnähe verlegen</strong> — Kabelisolationen schmelzen ab ~120°C.</span></div>
+      </div>
+      <div class="quiz-box" id="quiz10">
+        <div class="quiz-title">// Mini-Quiz — Kapitel 10</div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q1</span> Was ist die häufigste Ursache für Elektrikprobleme bei alten Mopeds?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q10-1" value="a"> Zu alte Kabel.</label><label class="quiz-option"><input type="radio" name="q10-1" value="b"> Schlechte oder fehlende Masse-Verbindung.</label><label class="quiz-option"><input type="radio" name="q10-1" value="c"> Falsche Glühbirnen.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q2</span> Warum muss ein Mindestabstand von 30 mm zum Auspuff eingehalten werden?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q10-2" value="a"> Wegen der Vibrationsgefahr.</label><label class="quiz-option"><input type="radio" name="q10-2" value="b"> Weil Kabelisolierungen bei Hitze schmelzen und Kurzschlüsse entstehen.</label><label class="quiz-option"><input type="radio" name="q10-2" value="c"> Wegen der Magnetwirkung des Auspuffs.</label></div></div>
+        <div class="quiz-question"><div class="quiz-q-text"><span class="quiz-q-num">Q3</span> Was erzeugt den elektrischen Strom beim fahrenden S51?</div><div class="quiz-options"><label class="quiz-option"><input type="radio" name="q10-3" value="a"> Ein Akkumulator / eine Batterie.</label><label class="quiz-option"><input type="radio" name="q10-3" value="b"> Die Lichtmaschine, die vom Motor angetrieben wird.</label><label class="quiz-option"><input type="radio" name="q10-3" value="c"> Das Dynamo-Prinzip der Reifen.</label></div></div>
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz10', ['b','b','b'])">Antworten prüfen</button>
+        <div class="quiz-result" id="quiz10-result"></div>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     KAPITEL 11–15: ACCORDION
+══════════════════════════════════════════════ -->
+<div class="divider"></div>
+
+<section id="weitere" class="anchor-target">
+  <div class="section-header">
+    <div class="section-eyebrow">// Kapitelübersicht</div>
+    <h2 class="section-title">Kapitel 11–15: Fertigstellung</h2>
+  </div>
+
+  <div id="sum11" class="summary-chapter">
+    <div class="summary-header" onclick="toggleSummary('sum11')">
+      <span class="summary-num">K11</span>
+      <span class="summary-name">Zündanlage einstellen</span>
+      <span class="summary-arrow" id="sum11-arr">▼</span>
+    </div>
+    <div class="summary-body" id="sum11-body">
+      <p>Die Zündanlage der S51 besteht aus Unterbrecherkontakt, Kondensator, Zündspule und Zündkerze. Der richtige Zündzeitpunkt ist entscheidend für Leistung und Laufruhe.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">01</span><span>Zündkerze NGK B6HS oder Bosch W5AC einschrauben (Anzugsmoment 20 Nm), Elektrodenabstand prüfen: 0,5 mm.</span></div>
+        <div class="mini-step"><span class="mini-step-num">02</span><span>Unterbrecherkontakt-Abstand prüfen: 0,4 mm bei vollständig geöffnetem Kontakt (Fühlerlehre).</span></div>
+        <div class="mini-step"><span class="mini-step-num">03</span><span>Zündzeitpunkt einstellen: OT-Markierung auf dem Schwungrad bei geschlossenem Kontakt mit Prüflampe oder Multimeter kontrollieren. Sollzündzeitpunkt: 2–3 mm vor OT.</span></div>
+        <div class="mini-step"><span class="mini-step-num">04</span><span>Zündkabel auf festen Sitz in der Zündspule und auf der Zündkerze prüfen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">05</span><span>⚠ Achtung: Beim Einstellen nicht das Schwungrad berühren, wenn der Motor dreht — Verletzungsgefahr durch rotierende Masse.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sum12" class="summary-chapter">
+    <div class="summary-header" onclick="toggleSummary('sum12')">
+      <span class="summary-num">K12</span>
+      <span class="summary-name">Lenker & Bedienelemente</span>
+      <span class="summary-arrow" id="sum12-arr">▼</span>
+    </div>
+    <div class="summary-body" id="sum12-body">
+      <p>Lenker, Gasdrehgriff, Kupplungshebel, Bremshebel, Tacho und Spiegel werden montiert und alle Züge verlegt.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">01</span><span>Lenker in Lenkerhalter einsetzen, Klemmschrauben auf 20 Nm anziehen. Lenker muss mittig sitzen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">02</span><span>Gasdrehgriff auf rechte Lenkerseite aufsetzen, Gaszug einführen, Zugspiel auf 2–3 mm einstellen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">03</span><span>Kupplungshebel links montieren, Kupplungszug einlegen und Spiel auf 3–4 mm einstellen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">04</span><span>Tacho auf Halter befestigen, Tacho-Welle anschließen (Antrieb am Vorderrad-Nabe).</span></div>
+        <div class="mini-step"><span class="mini-step-num">05</span><span>Spiegel links und rechts einschrauben (linksseitiges Gewinde beachten: Linksgewinde!).</span></div>
+        <div class="mini-step"><span class="mini-step-num">06</span><span>⚠ Zugspiel-Kontrolle: Bei voll eingeschlagenem Lenker darf der Motor nicht von selbst beschleunigen.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sum13" class="summary-chapter">
+    <div class="summary-header" onclick="toggleSummary('sum13')">
+      <span class="summary-num">K13</span>
+      <span class="summary-name">Sitzbank montieren</span>
+      <span class="summary-arrow" id="sum13-arr">▼</span>
+    </div>
+    <div class="summary-body" id="sum13-body">
+      <p>Die Sitzbank wird über die Haltenase vorn eingehängt und hinten mit Schnellverschluss oder Schraube gesichert.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">01</span><span>Sitzbank-Scharnier oder Haltenase vorn in die Rahmenöse einhaken.</span></div>
+        <div class="mini-step"><span class="mini-step-num">02</span><span>Sitzbank nach hinten herunterklappen und hinten mit Schnellverschluss-Haken oder Sicherungsschraube am Rahmen fixieren.</span></div>
+        <div class="mini-step"><span class="mini-step-num">03</span><span>Sitzbankschloss prüfen: Sitzbank muss sicher sitzen und darf bei einem kräftigen Zug nach oben nicht loslassen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">04</span><span>Werkzeugfach unter der Sitzbank kontrollieren — kein loses Werkzeug, das bei Fahrt Geräusche macht.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sum14" class="summary-chapter">
+    <div class="summary-header" onclick="toggleSummary('sum14')">
+      <span class="summary-num">K14</span>
+      <span class="summary-name">Verkleidung & Bleche</span>
+      <span class="summary-arrow" id="sum14-arr">▼</span>
+    </div>
+    <div class="summary-body" id="sum14-body">
+      <p>Kotflügel, Seitendeckel, Kettenschutz und Scheinwerfergehäuse werden montiert und ausgerichtet.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">01</span><span>Vorderes Schutzblech an Gabelholm-Halterungen befestigen — Abstand zum Reifen mindestens 15 mm auf der gesamten Umlaufbahn prüfen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">02</span><span>Hinteres Schutzblech am Rahmen und Schwinge montieren — Schutzblech darf bei Federbewegung nicht anschlagen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">03</span><span>Seitendeckel links und rechts einclipsen oder verschrauben. Alle Clips auf festen Sitz prüfen — kein Klappern.</span></div>
+        <div class="mini-step"><span class="mini-step-num">04</span><span>Kettenschutz montieren — schützt vor Kettenkontakt an Bekleidung und Werkzeug.</span></div>
+        <div class="mini-step"><span class="mini-step-num">05</span><span>Scheinwerfergehäuse montieren, Scheinwerfer ausrichten (Lichteinstellung nach StVZO: bei 10 m Abstand Lichtkegel 100 cm unterhalb der Scheinwerferhöhe).</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sum15" class="summary-chapter">
+    <div class="summary-header" onclick="toggleSummary('sum15')">
+      <span class="summary-num">K15</span>
+      <span class="summary-name">Erstinbetriebnahme & Abschlusskontrolle</span>
+      <span class="summary-arrow" id="sum15-arr">▼</span>
+    </div>
+    <div class="summary-body" id="sum15-body">
+      <p>Der letzte und wichtigste Schritt: Das vollständig aufgebaute Moped systematisch prüfen und erstmals in Betrieb nehmen.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">01</span><span>Vollständige Sichtprüfung: Alle Schrauben nochmals kontrollieren, keine losen Teile, keine schleifenden Kabel.</span></div>
+        <div class="mini-step"><span class="mini-step-num">02</span><span>Kraftstoff einfüllen: Kraftstoff-Öl-Gemisch 1:50 (1 Teil Zweitaktöl auf 50 Teile Benzin).</span></div>
+        <div class="mini-step"><span class="mini-step-num">03</span><span>Kaltstart: Choke schließen, 3–5× durchtreten, dann wieder öffnen und anlassen. Bei erfolgreichem Start: Motor warm laufen lassen (mindestens 5 Minuten), Leerlaufdrehzahl und Vergasergemisch einstellen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">04</span><span>Erste Fahrt: Nur auf privatem Gelände oder gesichertem Bereich. Alle Funktionen: Bremsen, Licht, Hupe, Blinker, Kupplung prüfen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">05</span><span>Nach 50 km Einfahrstrecke: Alle Anzugsmomente nachprüfen (Wärmedehnung löst Schrauben), Kettendurchhang kontrollieren, Vergaser nachstellen.</span></div>
+        <div class="mini-step"><span class="mini-step-num">06</span><span>⚠ Keine Fahrt im Straßenverkehr ohne gültige Betriebserlaubnis, Versicherungskennzeichen und Führerschein der Klasse AM (Ausnahmen für Fahrzeuge mit Erstzulassung vor bestimmten Datum prüfen).</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     TUNING
+══════════════════════════════════════════════ -->
+<div class="divider"></div>
+
+<section id="tuning" class="anchor-target">
+  <div class="section-header">
+    <div class="section-eyebrow">// Zusatzmodule</div>
+    <h2 class="section-title">Tuning-Module T01–T03</h2>
+  </div>
+
+  <article class="tuning-chapter">
+    <div class="tuning-header">
+      <div class="tuning-eyebrow">// Tuning-Modul T01</div>
+      <div class="tuning-title">Leistungssteigerung</div>
+    </div>
+    <div class="tuning-body">
+      <div>
+        <div class="subsection-title" style="color: var(--warn);">Möglichkeiten zur Leistungssteigerung</div>
+        <div class="tuning-grid">
+          <div class="tuning-card">
+            <div class="tuning-card-title pro">✓ Möglichkeiten</div>
+            <ul>
+              <li>Größerer Vergaser (z.B. BVF 16N3-1 → 19N1-5)</li>
+              <li>Sportluftfilter / Keihin-Vergaser</li>
+              <li>Leistungsauspuff (z.B. SIP Road oder handgeschweißter Sportauspuff)</li>
+              <li>Zylinder-Kit mit größerem Hubraum (60–70 ccm)</li>
+              <li>Steuerung optimieren (Einlassöffnungszeit durch Fräsen)</li>
+              <li>Polini / Malossi Sportzylinder</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title info">⟩ Vorteile</div>
+            <ul>
+              <li>Deutlich höhere Leistung (bis ~6 PS statt ~3,6 PS)</li>
+              <li>Bessere Elastizität im Drehzahlband</li>
+              <li>Schärferer Klang</li>
+              <li>Bessere Fahrbarkeit bergauf</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title con">✕ Risiken</div>
+            <ul>
+              <li>Erhöhte Motorbelastung und Verschleiß</li>
+              <li>Ohne Vergaseranpassung mageres Gemisch → Motorschaden</li>
+              <li>Überhitzung bei zu radikalem Tuning</li>
+              <li>Kühlrippen reichen bei Extremtuning nicht mehr aus</li>
+              <li>Falsch abgestimmter Sportauspuff kann Leistung reduzieren</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title law">⚖ Rechtliches</div>
+            <ul>
+              <li>Leistungssteigerungen über 3,7 kW (5 PS) oder 45 km/h verlangen Ummeldung oder Umschlüsselung</li>
+              <li>Tuning mit Betriebserlaubnis-Verlust = keine Versicherung</li>
+              <li>Hubraumvergrößerung erfordert neue TÜV-Abnahme</li>
+              <li>Für Fahrer unter 18: Beschränkung auf 45 km/h gilt weiterhin</li>
+              <li>Sportauspuff ohne ABE = nicht straßenlegales Fahrzeug</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="legal-box">
+        ⚖ WICHTIG: Jede Leistungssteigerung, die den Ursprungszustand des Fahrzeugs verändert, kann die Betriebserlaubnis erlöschen lassen. Ohne Betriebserlaubnis ist das Fahrzeug nicht versichert. Alle Tuningmaßnahmen vor der Durchführung mit dem TÜV oder einem zugelassenen Sachverständigen absprechen. Für Rennsport auf nicht-öffentlichen Geländen gelten andere Regeln.
+      </div>
+    </div>
+  </article>
+
+  <article class="tuning-chapter">
+    <div class="tuning-header">
+      <div class="tuning-eyebrow">// Tuning-Modul T02</div>
+      <div class="tuning-title">Optisches Tuning</div>
+    </div>
+    <div class="tuning-body">
+      <div>
+        <div class="subsection-title" style="color: var(--warn);">Möglichkeiten zur Optik-Verbesserung</div>
+        <div class="tuning-grid">
+          <div class="tuning-card">
+            <div class="tuning-card-title pro">✓ Möglichkeiten</div>
+            <ul>
+              <li>Neulackierung in individuellen Farben (Autolack / Sprühlack)</li>
+              <li>Chromteile: Lenker, Auspuff, Felgen</li>
+              <li>LED-Scheinwerfer (mit passendem Regler)</li>
+              <li>Custom-Sitzbank (Sattler)</li>
+              <li>Tieferlegung durch kürzere Federbeine</li>
+              <li>Breite oder Speichenfelgen</li>
+              <li>Lenkerumbau (Scrambler-Lenker, Clubman etc.)</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title con">✕ Risiken & Nachteile</div>
+            <ul>
+              <li>LED ohne Regleranpassung zerstört Lichtmaschine</li>
+              <li>Zu kurze Federbeine reduzieren Federweg stark</li>
+              <li>Chromteile rosten bei mangelnder Pflege schnell</li>
+              <li>Breite Reifen passen u.U. nicht ohne Schwingen-Umbau</li>
+              <li>Aufwändige Lackierungen verteuern Reparaturen</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title law">⚖ Rechtliches</div>
+            <ul>
+              <li>LED-Umbau nur mit ABE oder Einzelabnahme legal</li>
+              <li>Lenker darf max. 80 cm Breite haben (StVZO)</li>
+              <li>Tieferlegung: Mindest-Bodenfreiheit 100 mm</li>
+              <li>Farbe ist grundsätzlich genehmigungsfrei, sofern keine Tarnmuster (militärisch)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="legal-box">
+        ⚖ Optisches Tuning ist in der Regel weniger kritisch als Leistungstuning — aber auch hier gilt: Jede Änderung an sicherheitsrelevanten Teilen (Beleuchtung, Lenkgeometrie, Reifen, Federung) muss genehmigt werden. Im Zweifel: Erst TÜV fragen, dann schrauben.
+      </div>
+    </div>
+  </article>
+
+  <article class="tuning-chapter">
+    <div class="tuning-header">
+      <div class="tuning-eyebrow">// Tuning-Modul T03</div>
+      <div class="tuning-title">Fahrwerksoptimierung</div>
+    </div>
+    <div class="tuning-body">
+      <div>
+        <div class="subsection-title" style="color: var(--warn);">Möglichkeiten zur Fahrwerksverbesserung</div>
+        <div class="tuning-grid">
+          <div class="tuning-card">
+            <div class="tuning-card-title pro">✓ Möglichkeiten</div>
+            <ul>
+              <li>Sportfederbeine mit einstellbarer Vorspannung</li>
+              <li>Gabelfedern mit progressiver Kennlinie</li>
+              <li>Hochwertigeres Gabelöl (SAE 15W statt 10W)</li>
+              <li>Breitere Reifen für bessere Traktion</li>
+              <li>Aluminium-Felgen (Gewichtsreduzierung)</li>
+              <li>Verstärkte Schwinge</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title info">⟩ Vorteile</div>
+            <ul>
+              <li>Bessere Straßenlage</li>
+              <li>Reduktion von Aufbauschluckern</li>
+              <li>Präziseres Einlenkverhalten</li>
+              <li>Bessere Rückmeldung beim Fahren</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title con">✕ Risiken</div>
+            <ul>
+              <li>Zu hartes Fahrwerk erhöht Ermüdung des Rahmens</li>
+              <li>Zu weiche Federn führen zu Grundberührung und Schlingern</li>
+              <li>Veränderte Lenkgeometrie kann Eigenstabilität reduzieren</li>
+              <li>Breitere Reifen erhöhen Lenkkräfte</li>
+            </ul>
+          </div>
+          <div class="tuning-card">
+            <div class="tuning-card-title law">⚖ Rechtliches</div>
+            <ul>
+              <li>Veränderte Federbeine: Abnahme erforderlich</li>
+              <li>Reifengrößen müssen in die Fahrzeugpapiere eingetragen sein</li>
+              <li>Schwingen-Änderungen gelten als Rahmenbauteile → TÜV-Prüfung</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="legal-box">
+        ⚖ Fahrwerkstuning hat direkten Einfluss auf die Fahrstabilität und Verkehrssicherheit. Veränderungen an Federbeinen, Gabel und Reifen bedürfen stets einer Einzelabnahme oder einer ABE (Allgemeine Betriebserlaubnis) für das verwendete Bauteil. Nicht abgenommene Fahrwerksveränderungen führen zum Erlöschen der Betriebserlaubnis.
+      </div>
+    </div>
+  </article>
+</section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">SIMSON S51 // KURS</div>
+  <p>Vom Einzelteil zum Moped — Digitaler Vollkurs</p>
+  <p style="margin-top: 8px; font-size: 10px; color: var(--text-muted);">15 Kapitel · 3 Tuning-Module · 45 Quiz-Fragen · Anfängerfreundlich</p>
+</footer>
+
+<script>
+function checkQuiz(quizId, correct) {
+  const box = document.getElementById(quizId);
+  const result = document.getElementById(quizId + '-result');
+  let score = 0;
+  const total = correct.length;
+
+  correct.forEach((ans, i) => {
+    const qNum = i + 1;
+    const selected = box.querySelector('input[name="' + quizId.replace('quiz','q') + '-' + qNum + '"]:checked');
+    const opts = box.querySelectorAll('label[class*="quiz-option"]');
+    const radioName = quizId.replace('quiz','q') + '-' + qNum;
+    const allOpts = box.querySelectorAll('input[name="' + radioName + '"]');
+    
+    allOpts.forEach(radio => {
+      const lbl = radio.parentElement;
+      lbl.classList.remove('correct', 'wrong');
+      if (radio.value === ans) {
+        lbl.classList.add('correct');
+      }
+      if (selected && radio === selected && radio.value !== ans) {
+        lbl.classList.add('wrong');
+      }
+    });
+
+    if (selected && selected.value === ans) score++;
+  });
+
+  result.textContent = score === total
+    ? '✓ Perfekt! Alle ' + total + ' Antworten korrekt.'
+    : score + ' von ' + total + ' korrekt — überprüfe die markierten Antworten.';
+  result.className = 'quiz-result show ' + (score === total ? 'pass' : 'fail');
+}
+
+function toggleSummary(id) {
+  const body = document.getElementById(id + '-body');
+  const arr = document.getElementById(id + '-arr');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arr.textContent = isOpen ? '▼' : '▲';
+}
+
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
