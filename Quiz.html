@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Lernplattform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a, #1e293b);
+      color: white;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5rem;
+      color: #f8e7b0;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      color: #cbd5e1;
+      font-size: 1.2rem;
+      line-height: 1.8;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .module {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 30px;
+      padding: 40px;
+      margin-bottom: 50px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .module h2 {
+      font-family: 'Cormorant Garamond', serif;
+      color: #f8e7b0;
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .module p {
+      color: #e2e8f0;
+      line-height: 1.9;
+      margin-bottom: 18px;
+      font-size: 1.05rem;
+    }
+
+    .quiz-title {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #fde68a;
+      font-weight: 600;
+    }
+
+    .question {
+      background: rgba(0,0,0,0.25);
+      padding: 25px;
+      border-radius: 20px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .question h4 {
+      margin-bottom: 18px;
+      font-size: 1.1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 12px;
+      cursor: pointer;
+      color: #cbd5e1;
+    }
+
+    input[type="radio"] {
+      margin-right: 10px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #f8e7b0, #facc15);
+      color: #111827;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 20px;
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.5);
+      display: none;
+    }
+
+    .wrong {
+      border: 1px solid rgba(239,68,68,0.5);
+      background: rgba(239,68,68,0.12);
+    }
+
+    .reference {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 14px;
+      background: rgba(239,68,68,0.15);
+      color: #fecaca;
+      display: none;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 80px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="hero">
+      <h1>Premium Lernplattform</h1>
+      <p>
+        Hochwertige digitale Vorbereitung für Interviews, Austauschprogramme
+        und Wissenstests über Deutschland, Europa und Australien.
+      </p>
+    </div>
+
+    <div class="module" id="module1">
+      <h2>Aktuelle Themen & Zeitgeschehen</h2>
+
+      <p>Deutschland und Europa erleben tiefgreifende Veränderungen. Themen wie künstliche Intelligenz, Digitalisierung, Klimapolitik und internationale Sicherheit prägen die gesellschaftliche Diskussion.</p>
+
+      <p>Der Krieg in der Ukraine hat Europas Sicherheitsarchitektur verändert. Deutschland investiert stärker in Verteidigung und europäische Zusammenarbeit.</p>
+
+      <p>Auch der Green Deal der Europäischen Union spielt eine zentrale Rolle. Ziel ist ein klimaneutrales Europa mit nachhaltiger Wirtschaft und moderner Energiepolitik.</p>
+
+      <p>Migration bleibt ebenfalls ein wichtiges Thema. Deutschland benötigt Fachkräfte aus dem Ausland und diskutiert gleichzeitig Integration und gesellschaftlichen Zusammenhalt.</p>
+
+      <div class="quiz-title">Quiz</div>
+
+      <div class="question" data-answer="a">
+        <h4>1. Welches Thema beeinflusst Europa aktuell besonders stark?</h4>
+        <label><input type="radio" name="q1" value="a">A) Digitalisierung</label>
+        <label><input type="radio" name="q1" value="b">B) Ritterturniere</label>
+        <label><input type="radio" name="q1" value="c">C) Pyramidenbau</label>
+        <div class="reference">Richtige Passage: Digitalisierung verändert Gesellschaft und Wirtschaft.</div>
+      </div>
+
+      <div class="question" data-answer="a">
+        <h4>2. Warum ist Migration für Deutschland wichtig?</h4>
+        <label><input type="radio" name="q2" value="a">A) Wegen Fachkräften</label>
+        <label><input type="radio" name="q2" value="b">B) Wegen Vulkanen</label>
+        <label><input type="radio" name="q2" value="c">C) Wegen Raumfahrt</label>
+        <div class="reference">Richtige Passage: Deutschland benötigt Fachkräfte aus dem Ausland.</div>
+      </div>
+
+      <button class="btn" onclick="checkQuiz('module1')">Quiz auswerten</button>
+      <div class="result"></div>
+    </div>
+
+    <div class="module" id="module2">
+      <h2>Australien</h2>
+
+      <p>Australien ist ein Kontinent und ein Staat zugleich. Die Hauptstadt ist Canberra, während Sydney und Melbourne weltweit bekannt sind.</p>
+
+      <p>Das Land besitzt einzigartige Naturwunder wie das Great Barrier Reef, tropische Regenwälder und weite Wüstenlandschaften.</p>
+
+      <p>Die Kultur der Aboriginal Peoples gehört zu den ältesten kontinuierlichen Kulturen der Welt.</p>
+
+      <p>Australien ist eine moderne Demokratie mit starker Wirtschaft und multikultureller Gesellschaft.</p>
+
+      <div class="quiz-title">Quiz</div>
+
+      <div class="question" data-answer="b">
+        <h4>1. Was ist die Hauptstadt Australiens?</h4>
+        <label><input type="radio" name="q3" value="a">A) Sydney</label>
+        <label><input type="radio" name="q3" value="b">B) Canberra</label>
+        <label><input type="radio" name="q3" value="c">C) Melbourne</label>
+        <div class="reference">Richtige Passage: Die Hauptstadt Australiens ist Canberra.</div>
+      </div>
+
+      <div class="question" data-answer="b">
+        <h4>2. Welches Naturwunder liegt in Australien?</h4>
+        <label><input type="radio" name="q4" value="a">A) Mount Everest</label>
+        <label><input type="radio" name="q4" value="b">B) Great Barrier Reef</label>
+        <label><input type="radio" name="q4" value="c">C) Amazonas</label>
+        <div class="reference">Richtige Passage: Das Great Barrier Reef gehört zu den bekanntesten Naturwundern.</div>
+      </div>
+
+      <button class="btn" onclick="checkQuiz('module2')">Quiz auswerten</button>
+      <div class="result"></div>
+    </div>
+
+    <div class="module" id="module3">
+      <h2>Deutsche Geschichte nach 1945</h2>
+
+      <p>Nach dem Zweiten Weltkrieg wurde Deutschland in Besatzungszonen aufgeteilt. Daraus entstanden 1949 die Bundesrepublik Deutschland und die DDR.</p>
+
+      <p>Die Berliner Mauer wurde 1961 gebaut und teilte Ost- und Westdeutschland.</p>
+
+      <p>1989 führten friedliche Proteste zum Fall der Berliner Mauer.</p>
+
+      <p>1990 wurde Deutschland wiedervereinigt und entwickelte sich zu einer führenden Demokratie Europas.</p>
+
+      <div class="quiz-title">Quiz</div>
+
+      <div class="question" data-answer="a">
+        <h4>1. Wann endete der Zweite Weltkrieg?</h4>
+        <label><input type="radio" name="q5" value="a">A) 1945</label>
+        <label><input type="radio" name="q5" value="b">B) 1939</label>
+        <label><input type="radio" name="q5" value="c">C) 1961</label>
+        <div class="reference">Richtige Passage: Der Zweite Weltkrieg endete 1945.</div>
+      </div>
+
+      <div class="question" data-answer="a">
+        <h4>2. Wann fiel die Berliner Mauer?</h4>
+        <label><input type="radio" name="q6" value="a">A) 1989</label>
+        <label><input type="radio" name="q6" value="b">B) 1972</label>
+        <label><input type="radio" name="q6" value="c">C) 1999</label>
+        <div class="reference">Richtige Passage: Am 9. November 1989 fiel die Berliner Mauer.</div>
+      </div>
+
+      <button class="btn" onclick="checkQuiz('module3')">Quiz auswerten</button>
+      <div class="result"></div>
+    </div>
+
+    <footer>
+      Premium Lernplattform © 2026
+    </footer>
+
+  </div>
+
+  <script>
+    function checkQuiz(moduleId) {
+      const module = document.getElementById(moduleId);
+      const questions = module.querySelectorAll('.question');
+      const result = module.querySelector('.result');
+
+      let score = 0;
+
+      questions.forEach(question => {
+        const correct = question.dataset.answer;
+        const selected = question.querySelector('input:checked');
+        const reference = question.querySelector('.reference');
+
+        question.classList.remove('wrong');
+        reference.style.display = 'none';
+
+        if (selected && selected.value === correct) {
+          score++;
+        } else {
+          question.classList.add('wrong');
+          reference.style.display = 'block';
+        }
+      });
+
+      result.style.display = 'block';
+      result.innerHTML = `<h3>Ergebnis</h3><p>Du hast <strong>${score}</strong> von <strong>${questions.length}</strong> Fragen richtig beantwortet.</p>`;
+    }
+  </script>
+</body>
+</html>
