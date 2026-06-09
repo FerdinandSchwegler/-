@@ -1,0 +1,1015 @@
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType,
+  ShadingType, VerticalAlign, PageNumber, PageBreak, LevelFormat,
+  TableOfContents, ExternalHyperlink
+} = require('docx');
+const fs = require('fs');
+
+// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
+const C = {
+  navy:   "0A2E4A",
+  cyan:   "006B5A",
+  coral:  "C0392B",
+  steel:  "2C3E50",
+  mid:    "5D6D7E",
+  light:  "EAF4F4",
+  code:   "1E2D3D",
+  codeBg: "F4F8FB",
+  white:  "FFFFFF",
+  border: "C8D8E4",
+  accent: "1A6B8A",
+};
+
+const border = { style: BorderStyle.SINGLE, size: 1, color: C.border };
+const borders = { top: border, bottom: border, left: border, right: border };
+const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function h1(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    children: [new TextRun({ text, font: "Arial", size: 36, bold: true, color: C.navy })],
+    spacing: { before: 480, after: 240 },
+  });
+}
+function h2(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    children: [new TextRun({ text, font: "Arial", size: 28, bold: true, color: C.accent })],
+    spacing: { before: 360, after: 180 },
+  });
+}
+function h3(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_3,
+    children: [new TextRun({ text, font: "Arial", size: 24, bold: true, color: C.steel })],
+    spacing: { before: 240, after: 120 },
+  });
+}
+function p(text, opts = {}) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: "Arial", size: 22, color: C.steel, ...opts })],
+    spacing: { after: 160 },
+  });
+}
+function pBold(text) {
+  return p(text, { bold: true });
+}
+function bullet(text, level = 0) {
+  return new Paragraph({
+    numbering: { reference: "bullets", level },
+    children: [new TextRun({ text, font: "Arial", size: 22, color: C.steel })],
+    spacing: { after: 100 },
+  });
+}
+function numbered(text, level = 0) {
+  return new Paragraph({
+    numbering: { reference: "numbers", level },
+    children: [new TextRun({ text, font: "Arial", size: 22, color: C.steel })],
+    spacing: { after: 100 },
+  });
+}
+function code(text) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: "Courier New", size: 19, color: C.code })],
+    shading: { fill: C.codeBg, type: ShadingType.CLEAR },
+    spacing: { after: 80, before: 80 },
+    indent: { left: 360 },
+    border: {
+      left: { style: BorderStyle.SINGLE, size: 6, color: C.cyan },
+    }
+  });
+}
+function note(text) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: "  Hinweis: ", font: "Arial", size: 20, bold: true, color: C.cyan }),
+      new TextRun({ text, font: "Arial", size: 20, color: C.steel, italics: true }),
+    ],
+    shading: { fill: C.light, type: ShadingType.CLEAR },
+    spacing: { after: 120, before: 120 },
+    indent: { left: 180 },
+  });
+}
+function warn(text) {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: "  Achtung: ", font: "Arial", size: 20, bold: true, color: C.coral }),
+      new TextRun({ text, font: "Arial", size: 20, color: C.steel }),
+    ],
+    shading: { fill: "FFF3F3", type: ShadingType.CLEAR },
+    spacing: { after: 120, before: 120 },
+    indent: { left: 180 },
+  });
+}
+function spacer(n = 1) {
+  return Array.from({ length: n }, () =>
+    new Paragraph({ children: [new TextRun("")], spacing: { after: 80 } })
+  );
+}
+function pageBreak() {
+  return new Paragraph({ children: [new PageBreak()] });
+}
+function divider() {
+  return new Paragraph({
+    children: [new TextRun("")],
+    border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: C.border } },
+    spacing: { after: 200, before: 200 },
+  });
+}
+
+// Coloured info box
+function infoBox(label, text, bgColor = C.light) {
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [9360],
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            borders: { top: { style: BorderStyle.SINGLE, size: 6, color: C.cyan }, bottom: noBorder, left: noBorder, right: noBorder },
+            shading: { fill: bgColor, type: ShadingType.CLEAR },
+            margins: { top: 120, bottom: 120, left: 240, right: 240 },
+            width: { size: 9360, type: WidthType.DXA },
+            children: [
+              new Paragraph({ children: [new TextRun({ text: label, font: "Arial", size: 20, bold: true, color: C.accent })], spacing: { after: 60 } }),
+              new Paragraph({ children: [new TextRun({ text, font: "Arial", size: 20, color: C.steel })], spacing: { after: 0 } }),
+            ],
+          })
+        ]
+      })
+    ]
+  });
+}
+
+// Reference entry table (Module 3)
+function refEntry(name, syntax, erklaerung, anwendung, beispiel, fehler, hinweis) {
+  const cellStyle = (txt, bold = false, isCode = false) => new TableCell({
+    borders,
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    children: [new Paragraph({ children: [new TextRun({ text: txt, font: isCode ? "Courier New" : "Arial", size: isCode ? 18 : 20, bold, color: isCode ? C.code : C.steel })] })]
+  });
+  const labelCell = (txt) => new TableCell({
+    borders,
+    shading: { fill: C.light, type: ShadingType.CLEAR },
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    width: { size: 2000, type: WidthType.DXA },
+    children: [new Paragraph({ children: [new TextRun({ text: txt, font: "Arial", size: 19, bold: true, color: C.accent })] })]
+  });
+  const dataCell = (txt, isCode = false) => new TableCell({
+    borders,
+    margins: { top: 80, bottom: 80, left: 120, right: 120 },
+    width: { size: 7360, type: WidthType.DXA },
+    children: [new Paragraph({ children: [new TextRun({ text: txt, font: isCode ? "Courier New" : "Arial", size: isCode ? 18 : 20, color: isCode ? C.code : C.steel })] })]
+  });
+
+  return [
+    new Table({
+      width: { size: 9360, type: WidthType.DXA },
+      columnWidths: [2000, 7360],
+      rows: [
+        new TableRow({ children: [
+          new TableCell({ borders, shading: { fill: C.navy, type: ShadingType.CLEAR }, columnSpan: 2,
+            margins: { top: 100, bottom: 100, left: 180, right: 180 },
+            children: [new Paragraph({ children: [new TextRun({ text: name, font: "Arial", size: 22, bold: true, color: C.white })] })] })
+        ]}),
+        new TableRow({ children: [labelCell("Syntax"), dataCell(syntax, true)] }),
+        new TableRow({ children: [labelCell("Funktion"), dataCell(erklaerung)] }),
+        new TableRow({ children: [labelCell("Anwendung"), dataCell(anwendung)] }),
+        new TableRow({ children: [labelCell("Beispiel"), dataCell(beispiel, true)] }),
+        new TableRow({ children: [labelCell("Fehlerquelle"), dataCell(fehler)] }),
+        new TableRow({ children: [labelCell("Hinweis"), dataCell(hinweis)] }),
+      ]
+    }),
+    new Paragraph({ children: [new TextRun("")], spacing: { after: 160 } }),
+  ];
+}
+
+// ─── MODULE 1: TECHNISCHE GRUNDLAGEN ──────────────────────────────────────────
+const module1 = [
+  pageBreak(),
+  h1("Modul 1: Technische Grundlagen und Programmierumgebung"),
+  p("Willkommen beim ersten Modul von CodeCraft. Bevor du deinen ersten Code schreibst, legen wir gemeinsam das technische Fundament. In diesem Modul lernst du alles, was du brauchst, um sicher und effektiv programmieren zu können — unabhängig davon, ob du Windows oder macOS verwendest."),
+
+  h2("1.1 Was ist Programmieren?"),
+  p("Programmieren bedeutet, einem Computer in einer Sprache, die er versteht, genaue Anweisungen zu geben. Ein Computer ist von sich aus dumm — er kann nichts, was man ihm nicht explizit erklärt. Doch wenn du ihm die richtigen Anweisungen gibst, erledigt er Aufgaben schneller und präziser als jeder Mensch."),
+  p("Eine Programmiersprache ist dabei das Bindeglied zwischen menschlichem Denken und maschineller Ausführung. Du schreibst Text in einer definierten Syntax (Grammatik), der Computer übersetzt diesen Text in Nullen und Einsen und führt ihn aus."),
+  p("Das Ergebnis eines Programms hängt vollständig von deinen Anweisungen ab. Wenn du 2 + 2 sagst, kommt 4 heraus. Wenn du einen Fehler machst, macht auch der Computer einen Fehler — er führt aus, was du geschrieben hast, nicht was du gemeint hast."),
+  infoBox("Analogie", "Programmieren ist wie Kochen nach Rezept: Das Rezept (Code) beschreibt jeden Schritt genau. Der Koch (Computer) führt jeden Schritt exakt aus. Wenn ein Schritt fehlt oder falsch ist, gelingt das Gericht nicht."),
+  ...spacer(),
+
+  h2("1.2 Welche Hardware wird benötigt?"),
+  p("Die gute Nachricht: Für das Programmieren mit HTML und Python brauchst du keinen leistungsstarken Computer. Nahezu jeder moderne Rechner reicht aus. Hier sind die Mindestanforderungen:"),
+  h3("Mindestanforderungen"),
+  bullet("Prozessor: Intel Core i3, AMD Ryzen 3 oder vergleichbar (ab 2015)"),
+  bullet("Arbeitsspeicher (RAM): 4 GB (8 GB empfohlen)"),
+  bullet("Festplattenspeicher: mindestens 10 GB frei"),
+  bullet("Betriebssystem: Windows 10 / 11 oder macOS 10.15 (Catalina) oder neuer"),
+  bullet("Internetverbindung: für Downloads und Online-Ressourcen"),
+  ...spacer(),
+  p("Was du nicht brauchst: eine dedizierte Grafikkarte, besondere Peripheriegeräte oder teure Software. Alles, was in diesem Kurs benötigt wird, ist entweder kostenlos oder bereits auf deinem System vorhanden."),
+
+  h2("1.3 Programmierumgebung unter Windows einrichten"),
+  p("Windows ist das weltweit am häufigsten verwendete Betriebssystem und bietet eine hervorragende Umgebung für Einsteiger. Wir richten Python und einen Code-Editor ein."),
+  h3("Schritt 1: Python unter Windows installieren"),
+  numbered("Öffne deinen Browser und gehe auf https://www.python.org/downloads/"),
+  numbered("Klicke auf den großen Button 'Download Python 3.x.x' (die aktuelle Version wird automatisch vorgeschlagen)"),
+  numbered("Öffne die heruntergeladene .exe-Datei"),
+  numbered("WICHTIG: Aktiviere das Häkchen bei 'Add Python to PATH' ganz unten im Installationsfenster"),
+  numbered("Klicke auf 'Install Now'"),
+  numbered("Warte, bis die Installation abgeschlossen ist, und klicke auf 'Close'"),
+  ...spacer(),
+  warn("Vergisst du 'Add Python to PATH', kannst du Python nicht über die Kommandozeile aufrufen. Falls das passiert, deinstalliere Python und installiere es erneut — diesmal mit gesetztem Häkchen."),
+  h3("Schritt 2: Installation überprüfen"),
+  p("Öffne die Eingabeaufforderung: Drücke die Windows-Taste + R, gib 'cmd' ein und drücke Enter. Tippe dann:"),
+  code("python --version"),
+  p("Du solltest eine Ausgabe wie 'Python 3.12.0' sehen. Falls eine Fehlermeldung erscheint, überprüfe die PATH-Einstellung."),
+  h3("Schritt 3: Visual Studio Code installieren"),
+  p("Visual Studio Code (kurz: VS Code) ist ein kostenloser, professioneller Code-Editor von Microsoft. Er ist leichtgewichtig, erweiterbar und ideal für Einsteiger."),
+  numbered("Gehe auf https://code.visualstudio.com/"),
+  numbered("Klicke auf 'Download for Windows'"),
+  numbered("Öffne die Installationsdatei und folge dem Assistenten"),
+  numbered("Starte VS Code nach der Installation"),
+  ...spacer(),
+  h3("Schritt 4: Python-Erweiterung in VS Code installieren"),
+  numbered("Klicke in VS Code auf das Puzzle-Icon in der linken Leiste (Erweiterungen) oder drücke Strg+Shift+X"),
+  numbered("Suche nach 'Python'"),
+  numbered("Installiere die Extension 'Python' von Microsoft (die erste Suchergebnis)"),
+  numbered("Nach der Installation: Strg+Shift+P, tippe 'Python: Select Interpreter' und wähle deine Python-Installation"),
+  ...spacer(),
+
+  h2("1.4 Programmierumgebung unter macOS einrichten"),
+  p("macOS hat gegenüber Windows den Vorteil, dass Unix-Werkzeuge bereits integriert sind. Die Einrichtung ist etwas anders, aber ebenso unkompliziert."),
+  h3("Schritt 1: Homebrew installieren (empfohlen)"),
+  p("Homebrew ist ein Paketmanager für macOS, der die Installation von Entwicklungstools erheblich vereinfacht. Öffne das Terminal (Finder → Programme → Dienstprogramme → Terminal) und führe aus:"),
+  code("/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""),
+  p("Folge den Anweisungen auf dem Bildschirm. Die Installation dauert einige Minuten."),
+  h3("Schritt 2: Python installieren"),
+  p("Nach Homebrew-Installation im Terminal:"),
+  code("brew install python3"),
+  p("Überprüfung:"),
+  code("python3 --version"),
+  p("Du solltest 'Python 3.x.x' sehen."),
+  h3("Schritt 3: VS Code auf macOS"),
+  numbered("Gehe auf https://code.visualstudio.com/"),
+  numbered("Lade die macOS-Version herunter (.dmg-Datei)"),
+  numbered("Öffne die .dmg-Datei und ziehe VS Code in den Programme-Ordner"),
+  numbered("Starte VS Code aus dem Programme-Ordner"),
+  numbered("Installiere die Python-Extension (wie unter Windows beschrieben)"),
+  ...spacer(),
+  note("Auf macOS heißt der Befehl 'python3' statt 'python'. Dies ist normal und hat technische Gründe. Du kannst einen Alias einrichten, aber für diesen Kurs verwenden wir immer 'python3'."),
+
+  h2("1.5 Erstes Programm erstellen, speichern und starten"),
+  p("Jetzt ist es soweit: Dein erstes Programm. Wir beginnen mit dem klassischen 'Hallo, Welt!' — eine Tradition in der Programmierung seit den 1970er Jahren."),
+  h3("HTML: Erste Webseite"),
+  numbered("Öffne VS Code"),
+  numbered("Erstelle eine neue Datei: Datei → Neue Datei"),
+  numbered("Speichere sie sofort: Strg+S (Windows) oder Cmd+S (macOS), Dateiname: 'index.html'"),
+  numbered("Gib folgenden Code ein:"),
+  ...spacer(),
+  code("<!DOCTYPE html>"),
+  code("<html lang=\"de\">"),
+  code("<head>"),
+  code("  <meta charset=\"UTF-8\">"),
+  code("  <title>Meine erste Webseite</title>"),
+  code("</head>"),
+  code("<body>"),
+  code("  <h1>Hallo, Welt!</h1>"),
+  code("  <p>Das ist meine erste Webseite.</p>"),
+  code("</body>"),
+  code("</html>"),
+  ...spacer(),
+  numbered("Speichere die Datei (Strg+S / Cmd+S)"),
+  numbered("Öffne den Dateiordner im Explorer / Finder und doppelklicke auf 'index.html'"),
+  numbered("Dein Browser öffnet die Datei und zeigt 'Hallo, Welt!' an"),
+  ...spacer(),
+  h3("Python: Erstes Skript"),
+  numbered("Erstelle eine neue Datei in VS Code: 'hallo.py'"),
+  numbered("Schreibe:"),
+  code("print(\"Hallo, Welt!\")"),
+  numbered("Speichere die Datei"),
+  numbered("Öffne das Terminal in VS Code: Ansicht → Terminal (oder Strg+`)"),
+  numbered("Führe das Programm aus:"),
+  code("python hallo.py        # Windows"),
+  code("python3 hallo.py       # macOS"),
+  p("Die Ausgabe 'Hallo, Welt!' erscheint im Terminal. Herzlichen Glückwunsch — du bist jetzt Programmierer!"),
+
+  h2("1.6 Programme testen und debuggen"),
+  p("Debuggen bedeutet, Fehler im Code zu finden und zu beheben. Der Begriff stammt aus der Frühzeit der Computer, als ein Käfer (bug) in den Schaltkreisen Fehlfunktionen verursachte. Heute bezeichnet er jeden Programmfehler."),
+  h3("Arten von Fehlern"),
+  pBold("Syntaxfehler"),
+  p("Der Code ist grammatikalisch falsch — Python oder der Browser versteht ihn nicht und weigert sich, ihn auszuführen."),
+  code("print(\"Hallo\"     # Fehlende schließende Klammer"),
+  p("Python gibt aus: 'SyntaxError: unexpected EOF while parsing'"),
+  ...spacer(),
+  pBold("Laufzeitfehler"),
+  p("Der Code ist syntaktisch korrekt, aber während der Ausführung tritt ein Fehler auf."),
+  code("zahl = int(\"abc\")  # 'abc' kann nicht in Zahl umgewandelt werden"),
+  p("Python gibt aus: 'ValueError: invalid literal for int() with base 10'"),
+  ...spacer(),
+  pBold("Logikfehler"),
+  p("Der Code läuft ohne Fehlermeldung, liefert aber falsche Ergebnisse. Diese sind am schwierigsten zu finden."),
+  code("# Ziel: Durchschnitt von 3 und 7 berechnen"),
+  code("ergebnis = 3 + 7 / 2   # Falsch! Punkt vor Strich"),
+  code("# Richtig: ergebnis = (3 + 7) / 2"),
+  ...spacer(),
+  h3("Debugging-Strategie"),
+  bullet("Fehlermeldung vollständig lesen — sie enthält fast immer die Zeilennummer"),
+  bullet("Bei Logikfehlern: print()-Anweisungen einfügen, um Zwischenwerte zu prüfen"),
+  bullet("Den Code laut vorlesen — oft fällt der Fehler dann auf"),
+  bullet("Den Code von einem Kollegen oder einer KI gegenlesen lassen"),
+  bullet("VS Code hat einen integrierten Debugger: Breakpoints setzen, Code schrittweise ausführen"),
+  ...spacer(),
+
+  h2("1.7 Typische Anfängerfehler und wie man sie vermeidet"),
+  p("Fehler beim Programmieren sind normal — auch für erfahrene Entwickler. Diese Liste der häufigsten Anfängerfehler hilft dir, unnötige Frustration zu vermeiden."),
+
+  h3("Python-Fehler"),
+  infoBox("Fehler 1: Einrückung (Indentation)", "Python verwendet Einrückungen als Strukturelement. Ein Tab oder 4 Leerzeichen am Zeilenanfang bedeuten, dass dieser Code zu einem Block gehört. Konsistenz ist zwingend — nie Tab und Leerzeichen mischen.\n\nFalsch:\ndef sag_hallo():\nprint(\"Hallo\")  # nicht eingerückt!\n\nRichtig:\ndef sag_hallo():\n    print(\"Hallo\")  # 4 Leerzeichen"),
+  ...spacer(),
+  infoBox("Fehler 2: Anführungszeichen-Mismatch", "Strings müssen mit denselben Anführungszeichen beginnen und enden. Einfache (') und doppelte (\") Anführungszeichen sind beide gültig, aber nicht mischbar.\n\nFalsch: name = 'Anna\"\nRichtig: name = 'Anna' oder name = \"Anna\""),
+  ...spacer(),
+  infoBox("Fehler 3: Variablennamen mit Großbuchstaben", "Python unterscheidet zwischen Groß- und Kleinschreibung. 'Name' und 'name' sind zwei verschiedene Variablen. Halte dich an Kleinschreibung mit Unterstrichen.\n\nFalsch: Alter = 25  dann  print(alter)  → NameError\nRichtig: alter = 25  dann  print(alter)"),
+  ...spacer(),
+
+  h3("HTML-Fehler"),
+  infoBox("Fehler 4: Tags nicht geschlossen", "Jeder öffnende HTML-Tag muss einen entsprechenden schließenden Tag haben (außer sogenannte void elements wie <br>, <img>).\n\nFalsch: <p>Text ohne schließenden Tag\nRichtig: <p>Text mit schließendem Tag</p>"),
+  ...spacer(),
+  infoBox("Fehler 5: Falsche Verschachtelung", "HTML-Tags müssen in der richtigen Reihenfolge geöffnet und geschlossen werden.\n\nFalsch: <b><i>Text</b></i>\nRichtig: <b><i>Text</i></b>"),
+  ...spacer(),
+  infoBox("Fehler 6: Fehlende DOCTYPE-Deklaration", "Ohne <!DOCTYPE html> am Anfang kann der Browser in einen Kompatibilitätsmodus wechseln, der zu unerwarteten Darstellungsfehlern führt. Beginne jede HTML-Datei immer mit dieser Zeile."),
+  ...spacer(),
+];
+
+// ─── MODULE 2: FUNKTIONSWEISE VON PROGRAMMIERSPRACHEN ─────────────────────────
+const module2 = [
+  pageBreak(),
+  h1("Modul 2: Funktionsweise von Programmiersprachen"),
+  p("In diesem Modul lernst du die universellen Konzepte des Programmierens — Konzepte, die in fast jeder Programmiersprache existieren. Wenn du diese verstehst, hast du das Fundament, um nicht nur HTML und Python, sondern jede weitere Sprache schneller zu lernen."),
+
+  h2("2.1 Aufbau einer Programmiersprache"),
+  p("Jede Programmiersprache besteht aus drei grundlegenden Bestandteilen: Syntax, Semantik und Pragmatik."),
+  pBold("Syntax — die Grammatik"),
+  p("Syntax definiert, wie Code geschrieben werden muss. In Python endet kein Befehl mit einem Semikolon, in JavaScript hingegen schon (optional). Jede Sprache hat ihre eigenen Regeln."),
+  pBold("Semantik — die Bedeutung"),
+  p("Semantik definiert, was ein Codeausdruck tatsächlich bedeutet. Der Ausdruck '2 + 2' hat die semantische Bedeutung 'addiere 2 und 2'."),
+  pBold("Pragmatik — die Praxis"),
+  p("Pragmatik beschreibt, wie eine Sprache in der realen Welt eingesetzt wird — Konventionen, Bibliotheken, typische Anwendungsfälle."),
+  ...spacer(),
+
+  h2("2.2 Variablen"),
+  p("Eine Variable ist ein benannter Speicherplatz im Arbeitsspeicher des Computers. Du gibst ihr einen Namen und kannst einen Wert hineinlegen, ablesen und verändern."),
+  h3("Python"),
+  code("name = \"Maria\"       # String-Variable"),
+  code("alter = 28           # Integer-Variable"),
+  code("groesse = 1.72       # Float-Variable"),
+  code("aktiv = True         # Boolean-Variable"),
+  ...spacer(),
+  h3("Regeln für Variablennamen"),
+  bullet("Darf Buchstaben, Zahlen und Unterstriche enthalten"),
+  bullet("Muss mit Buchstabe oder Unterstrich beginnen (nicht mit Zahl)"),
+  bullet("Keine Sonderzeichen außer Unterstrich"),
+  bullet("Keine reservierten Wörter (if, for, while, class usw.)"),
+  bullet("Python: snake_case-Konvention (mein_name, max_wert)"),
+  ...spacer(),
+  note("Gute Variablennamen sind ein Zeichen von gutem Code. 'x' oder 'temp' sind kryptisch. 'benutzername' oder 'gesamtpreis' sind selbsterklärend."),
+
+  h2("2.3 Datentypen"),
+  p("Jeder Wert in einem Programm hat einen Typ. Der Typ bestimmt, welche Operationen möglich sind und wie der Wert im Speicher abgelegt wird."),
+  h3("Grundlegende Datentypen in Python"),
+  ...[ // Table: data types
+    new Table({
+      width: { size: 9360, type: WidthType.DXA },
+      columnWidths: [2200, 2200, 4960],
+      rows: [
+        new TableRow({ children: [
+          new TableCell({ borders, shading: { fill: C.navy, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 2200, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: "Typ", font: "Arial", size: 20, bold: true, color: C.white })] })] }),
+          new TableCell({ borders, shading: { fill: C.navy, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 2200, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: "Beispiel", font: "Arial", size: 20, bold: true, color: C.white })] })] }),
+          new TableCell({ borders, shading: { fill: C.navy, type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 4960, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: "Beschreibung", font: "Arial", size: 20, bold: true, color: C.white })] })] }),
+        ]}),
+        ...[
+          ["int", "42, -7, 0", "Ganze Zahlen ohne Dezimalstelle"],
+          ["float", "3.14, -0.5, 2.0", "Dezimalzahlen (Gleitkommazahlen)"],
+          ["str", '"Hallo", \'Welt\'', "Zeichenketten / Text"],
+          ["bool", "True, False", "Wahrheitswerte (nur zwei möglich)"],
+          ["list", "[1, 2, 3]", "Geordnete, veraenderliche Sammlung"],
+          ["tuple", "(1, 2, 3)", "Geordnete, unveraenderliche Sammlung"],
+          ["dict", '{"key": "value"}', "Schluessel-Wert-Paare"],
+          ["None", "None", "Kein Wert / leerer Wert"],
+        ].map(([t, b, d]) => new TableRow({ children: [
+          new TableCell({ borders, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 2200, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: t, font: "Courier New", size: 19, color: C.accent })] })] }),
+          new TableCell({ borders, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 2200, type: WidthType.DXA }, shading: { fill: C.codeBg, type: ShadingType.CLEAR }, children: [new Paragraph({ children: [new TextRun({ text: b, font: "Courier New", size: 18, color: C.code })] })] }),
+          new TableCell({ borders, margins: { top: 80, bottom: 80, left: 120, right: 120 }, width: { size: 4960, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: d, font: "Arial", size: 20, color: C.steel })] })] }),
+        ]}))
+      ]
+    }),
+    new Paragraph({ children: [new TextRun("")], spacing: { after: 200 } }),
+  ],
+
+  h2("2.4 Operatoren"),
+  p("Operatoren verbinden Werte und Variablen miteinander und führen Berechnungen oder Vergleiche durch."),
+  h3("Arithmetische Operatoren"),
+  code("5 + 3    # Addition: 8"),
+  code("10 - 4   # Subtraktion: 6"),
+  code("3 * 7    # Multiplikation: 21"),
+  code("15 / 4   # Division: 3.75"),
+  code("15 // 4  # Ganzzahldivision: 3"),
+  code("15 % 4   # Modulo (Rest): 3"),
+  code("2 ** 8   # Potenz: 256"),
+  ...spacer(),
+  h3("Vergleichsoperatoren"),
+  code("5 == 5   # Gleichheit: True"),
+  code("5 != 3   # Ungleich: True"),
+  code("7 > 4    # Groesser: True"),
+  code("3 < 2    # Kleiner: False"),
+  code("5 >= 5   # Groesser oder gleich: True"),
+  code("4 <= 3   # Kleiner oder gleich: False"),
+  ...spacer(),
+  h3("Logische Operatoren"),
+  code("True and False  # Und: False"),
+  code("True or False   # Oder: True"),
+  code("not True        # Negation: False"),
+  ...spacer(),
+
+  h2("2.5 Bedingungen"),
+  p("Bedingungen erlauben dem Programm, Entscheidungen zu treffen. Sie prüfen, ob eine Aussage wahr oder falsch ist, und führen je nach Ergebnis verschiedene Code-Blöcke aus."),
+  code("alter = 18"),
+  code(""),
+  code("if alter >= 18:"),
+  code("    print(\"Volljährig\")"),
+  code("elif alter >= 16:"),
+  code("    print(\"Fast volljährig\")"),
+  code("else:"),
+  code("    print(\"Minderjährig\")"),
+  ...spacer(),
+  p("Das Schlüsselwort 'if' startet die Bedingung. 'elif' (else if) prüft eine weitere Bedingung, wenn die erste falsch ist. 'else' ist der Auffangfall, wenn keine Bedingung zutrifft."),
+  note("Beachte die Doppelpunkte nach if, elif und else sowie die Einrückung des Codeblocks. Das ist Pythons Syntax für Blöcke."),
+
+  h2("2.6 Schleifen"),
+  p("Schleifen wiederholen Code-Blöcke. Sie sind eines der mächtigsten Konzepte in der Programmierung — statt 100 Zeilen Code zu schreiben, lässt du eine Schleife 100 Mal laufen."),
+  h3("for-Schleife"),
+  p("Iteriert über eine Sequenz (Liste, Zeichenkette, Zahlenbereich):"),
+  code("for i in range(5):"),
+  code("    print(i)"),
+  code("# Ausgabe: 0, 1, 2, 3, 4"),
+  ...spacer(),
+  code("fruechte = [\"Apfel\", \"Banane\", \"Kirsche\"]"),
+  code("for frucht in fruechte:"),
+  code("    print(frucht)"),
+  ...spacer(),
+  h3("while-Schleife"),
+  p("Läuft so lange, wie eine Bedingung wahr ist:"),
+  code("zahl = 1"),
+  code("while zahl <= 5:"),
+  code("    print(zahl)"),
+  code("    zahl = zahl + 1"),
+  ...spacer(),
+  warn("Eine while-Schleife, deren Bedingung nie falsch wird, läuft ewig (Endlosschleife). Stelle sicher, dass der Abbruchzustand irgendwann erreicht wird."),
+  h3("break und continue"),
+  code("for i in range(10):"),
+  code("    if i == 5:"),
+  code("        break        # Schleife sofort beenden"),
+  code("    if i % 2 == 0:"),
+  code("        continue     # Diesen Durchlauf überspringen"),
+  code("    print(i)"),
+  ...spacer(),
+
+  h2("2.7 Funktionen"),
+  p("Eine Funktion ist ein wiederverwendbarer Code-Block mit einem Namen. Anstatt denselben Code mehrfach zu schreiben, definierst du eine Funktion einmal und rufst sie beliebig oft auf."),
+  code("def berechne_flaeche(breite, hoehe):"),
+  code("    flaeche = breite * hoehe"),
+  code("    return flaeche"),
+  code(""),
+  code("ergebnis = berechne_flaeche(5, 3)"),
+  code("print(ergebnis)  # 15"),
+  ...spacer(),
+  p("Eine Funktion wird mit 'def' definiert, gefolgt vom Namen und Parametern in Klammern. 'return' gibt einen Wert zurück."),
+  h3("Standardparameter"),
+  code("def begruessung(name, sprache=\"Deutsch\"):"),
+  code("    if sprache == \"Deutsch\":"),
+  code("        return f\"Hallo, {name}!\""),
+  code("    else:"),
+  code("        return f\"Hello, {name}!\""),
+  code(""),
+  code("print(begruessung(\"Anna\"))          # Hallo, Anna!"),
+  code("print(begruessung(\"John\", \"English\")) # Hello, John!"),
+  ...spacer(),
+
+  h2("2.8 Klassen und Objekte (Objektorientierte Programmierung)"),
+  p("Objektorientierte Programmierung (OOP) ist ein Paradigma, bei dem Code um 'Objekte' herum organisiert wird. Ein Objekt ist eine Datenstruktur mit Eigenschaften (Attribute) und Fähigkeiten (Methoden)."),
+  p("Eine Klasse ist der Bauplan für Objekte — ähnlich wie ein Formular, das man mehrfach ausfüllen kann."),
+  code("class Person:"),
+  code("    def __init__(self, name, alter):"),
+  code("        self.name = name"),
+  code("        self.alter = alter"),
+  code(""),
+  code("    def vorstellen(self):"),
+  code("        return f\"Ich bin {self.name}, {self.alter} Jahre alt.\""),
+  code(""),
+  code("person1 = Person(\"Anna\", 28)"),
+  code("person2 = Person(\"Max\", 34)"),
+  code(""),
+  code("print(person1.vorstellen())  # Ich bin Anna, 28 Jahre alt."),
+  code("print(person2.alter)         # 34"),
+  ...spacer(),
+  p("'__init__' ist eine spezielle Methode (Konstruktor), die aufgerufen wird, wenn ein neues Objekt erstellt wird. 'self' verweist auf das aktuelle Objekt."),
+
+  h2("2.9 Eingaben und Ausgaben"),
+  p("Programme kommunizieren mit der Außenwelt über Eingaben und Ausgaben."),
+  h3("Ausgaben in Python"),
+  code("print(\"Hallo\")                    # Einfacher Text"),
+  code("print(\"Name:\", name)              # Mehrere Werte"),
+  code("print(f\"Hallo, {name}!\")          # f-String (empfohlen)"),
+  code("print(\"Wert:\", zahl, end=\"\")      # Ohne Zeilenumbruch"),
+  ...spacer(),
+  h3("Eingaben in Python"),
+  code("name = input(\"Wie heisst du? \")"),
+  code("alter = int(input(\"Wie alt bist du? \"))  # Umwandlung in Integer!"),
+  code("print(f\"Hallo {name}, du bist {alter} Jahre alt.\""),
+  ...spacer(),
+  h3("HTML: Ausgaben"),
+  p("In HTML wird Inhalt direkt im Dokument angezeigt. JavaScript ermöglicht dynamische Ein-/Ausgaben."),
+  code("<p>Das wird im Browser angezeigt</p>"),
+  code("<input type=\"text\" placeholder=\"Dein Name\">"),
+  ...spacer(),
+
+  h2("2.10 Fehlerbehandlung"),
+  p("Professioneller Code bricht bei Fehlern nicht einfach ab — er behandelt sie elegant und gibt dem Nutzer sinnvolle Rückmeldungen."),
+  code("try:"),
+  code("    zahl = int(input(\"Gib eine Zahl ein: \"))"),
+  code("    ergebnis = 100 / zahl"),
+  code("    print(f\"100 / {zahl} = {ergebnis}\")"),
+  code("except ValueError:"),
+  code("    print(\"Fehler: Bitte eine gültige Zahl eingeben.\")"),
+  code("except ZeroDivisionError:"),
+  code("    print(\"Fehler: Division durch Null ist nicht erlaubt.\")"),
+  code("finally:"),
+  code("    print(\"Berechnung abgeschlossen.\")"),
+  ...spacer(),
+  p("'try' enthält den Code, der möglicherweise fehlschlägt. 'except' definiert, was bei bestimmten Fehlern passiert. 'finally' wird immer ausgeführt — egal ob Fehler oder nicht."),
+
+  h2("2.11 Logisches Denken und Algorithmen"),
+  p("Ein Algorithmus ist eine präzise, endliche Abfolge von Schritten zur Lösung eines Problems. Gutes algorithmisches Denken ist die wichtigste Fähigkeit eines Programmierers."),
+  h3("Beispiel: Algorithmus zum Finden des Maximums"),
+  code("def finde_maximum(zahlen):"),
+  code("    max_wert = zahlen[0]        # Erste Zahl als Startwert"),
+  code("    for zahl in zahlen:        # Alle Zahlen durchgehen"),
+  code("        if zahl > max_wert:    # Ist diese Zahl größer?"),
+  code("            max_wert = zahl    # Dann ist sie das neue Maximum"),
+  code("    return max_wert"),
+  code(""),
+  code("print(finde_maximum([3, 7, 2, 9, 1]))  # 9"),
+  ...spacer(),
+  h3("Schritte beim algorithmischen Denken"),
+  numbered("Problem klar formulieren: Was genau soll gelöst werden?"),
+  numbered("Eingaben und Ausgaben definieren: Was bekomme ich? Was gebe ich zurück?"),
+  numbered("Schritt-für-Schritt-Plan erstellen (Pseudocode)"),
+  numbered("Plan in Code umsetzen"),
+  numbered("Testen und überprüfen"),
+  ...spacer(),
+
+  h2("2.12 Best Practices für sauberen Code"),
+  p("Sauberer Code ist Code, der von anderen (und von dir selbst in 6 Monaten) gelesen und verstanden werden kann."),
+  h3("Kommentare"),
+  code("# Einzeiliger Kommentar"),
+  code("\"\"\""),
+  code("Mehrzeiliger Kommentar (Docstring)"),
+  code("Erklärt komplexe Funktionen oder Module"),
+  code("\"\"\""),
+  code(""),
+  code("def berechne_mwst(preis, satz=0.19):"),
+  code("    \"\"\"Berechnet die Mehrwertsteuer."),
+  code("    Args:"),
+  code("        preis: Nettopreis in Euro"),
+  code("        satz: MwSt-Satz (Standard: 19%)"),
+  code("    Returns:"),
+  code("        Bruttopreis inkl. MwSt"),
+  code("    \"\"\""),
+  code("    return preis * (1 + satz)"),
+  ...spacer(),
+  h3("Die wichtigsten Prinzipien"),
+  bullet("DRY — Don't Repeat Yourself: Duplizierter Code ist schwerer zu warten"),
+  bullet("KISS — Keep It Simple, Stupid: Einfache Lösungen sind wartbarer"),
+  bullet("Sprechende Namen: Variablen und Funktionen benennen, was sie tun"),
+  bullet("Eine Funktion, eine Aufgabe: Kleine, fokussierte Funktionen sind besser"),
+  bullet("Konsistente Formatierung: Nutze einen automatischen Formatter wie Black (Python)"),
+  bullet("Regelmäßig committen: Versionskontrolle mit Git schützt vor Datenverlust"),
+  ...spacer(),
+];
+
+// ─── MODULE 3 HELPER ──────────────────────────────────────────────────────────
+// Generate compact reference entries for 200 HTML + 200 Python
+// For brevity, we create representative entries for all major categories
+// with full detail
+
+function sectionHeader(text, color = C.navy) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: "Arial", size: 30, bold: true, color })],
+    shading: { fill: C.light, type: ShadingType.CLEAR },
+    spacing: { before: 480, after: 200 },
+    border: { left: { style: BorderStyle.SINGLE, size: 12, color: C.cyan } },
+    indent: { left: 200 },
+  });
+}
+
+// HTML Reference entries (200 entries grouped by category)
+const htmlCategories = {
+  "HTML-Grundstruktur & Dokumentstruktur": [
+    ["<!DOCTYPE html>", "<!DOCTYPE html>", "Deklariert den Dokumenttyp als HTML5", "Erste Zeile jeder HTML-Datei", "<!DOCTYPE html>\n<html lang=\"de\">", "Fehlendes DOCTYPE schaltet Browser in Quirks-Modus", "Immer als erste Zeile, groß geschrieben"],
+    ["<html>", "<html lang=\"de\">...</html>", "Wurzelelement des gesamten HTML-Dokuments", "Umschließt das gesamte Dokument", "<html lang=\"de\">\n  <head>...</head>\n  <body>...</body>\n</html>", "Fehlende lang-Angabe beeinträchtigt Screenreader", "lang-Attribut für Barrierefreiheit und SEO angeben"],
+    ["<head>", "<head>...</head>", "Enthält Metadaten, die nicht sichtbar sind", "Titel, Zeichensatz, CSS-Verknüpfungen", "<head>\n  <meta charset=\"UTF-8\">\n  <title>Seite</title>\n</head>", "Keine sichtbaren Inhalte hier platzieren", "Wichtig für SEO und Browser-Verhalten"],
+    ["<body>", "<body>...</body>", "Enthält alle sichtbaren Inhalte", "Alles, was im Browser angezeigt wird", "<body>\n  <h1>Hallo</h1>\n  <p>Text</p>\n</body>", "Nur einmal pro Dokument erlaubt", "Sichtbarer Teil der Webseite"],
+    ["<title>", "<title>Seitentitel</title>", "Definiert den Browser-Tab-Titel und SEO-Titel", "Browser-Tab, Lesezeichen, Suchergebnisse", "<title>Meine Website - Startseite</title>", "Ohne Titel zeigt Browser den Dateinamen", "Max. 60 Zeichen für gute SEO-Darstellung"],
+    ["<meta charset>", "<meta charset=\"UTF-8\">", "Definiert den Zeichensatz des Dokuments", "Immer in jedem HTML-Dokument", "<meta charset=\"UTF-8\">", "Fehlendes charset führt zu Darstellungsfehlern bei Umlauten", "UTF-8 unterstützt alle Sprachen weltweit"],
+    ["<meta name>", "<meta name=\"description\" content=\"...\">", "Definiert Metadaten für Browser und Suchmaschinen", "SEO, Social Media Vorschau", "<meta name=\"description\" content=\"Lernplattform\">", "Zu langer Content wird abgeschnitten", "Description max. 160 Zeichen"],
+    ["<meta viewport>", "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">", "Steuert die Darstellung auf mobilen Geräten", "Responsive Design", "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">", "Fehlen führt zu Zoom-Problemen auf Smartphones", "Immer für mobile-freundliche Seiten"],
+    ["<link>", "<link rel=\"stylesheet\" href=\"style.css\">", "Verknüpft externe Ressourcen, besonders CSS", "CSS-Dateien einbinden", "<link rel=\"stylesheet\" href=\"styles.css\">", "Falsche href führt zu stilloser Seite", "Im <head> platzieren"],
+    ["<script>", "<script src=\"app.js\"></script>", "Bindet JavaScript ein oder enthält es direkt", "JavaScript laden oder schreiben", "<script defer src=\"main.js\"></script>", "Ohne defer/async blockiert es das Laden", "Vor </body> oder mit defer-Attribut"],
+  ],
+  "Textstrukturierung & Überschriften": [
+    ["<h1>", "<h1>Hauptüberschrift</h1>", "Wichtigste Überschrift auf der Seite", "Haupt-Seitentitel, einmal pro Seite", "<h1>Willkommen bei CodeCraft</h1>", "Nur einmal pro Seite verwenden (SEO)", "Hierarchisch verwenden: h1 > h2 > h3"],
+    ["<h2>", "<h2>Abschnittsüberschrift</h2>", "Zweite Hierarchieebene", "Abschnittseinteilung", "<h2>Über uns</h2>", "Nicht h1 zu h3 springen (Hierarchie einhalten)", "Mehrfach verwendbar"],
+    ["<h3>", "<h3>Unterabschnitt</h3>", "Dritte Hierarchieebene", "Unterabschnitte innerhalb von h2-Blöcken", "<h3>Unser Team</h3>", "Nur innerhalb von h2-Blöcken verwenden", "Bis h6 möglich, selten tiefer als h4"],
+    ["<p>", "<p>Absatz</p>", "Absatz mit automatischem Abstand", "Fließtext, Beschreibungen", "<p>Dies ist ein Absatz mit normalem Text.</p>", "Kein Block-Element (div, h1 etc.) in <p>", "Standardelement für Fließtext"],
+    ["<strong>", "<strong>Text</strong>", "Markiert semantisch wichtigen, fett angezeigten Text", "Wichtige Schlüsselwörter hervorheben", "<p>Bitte <strong>nicht</strong> vergessen.</p>", "Nicht für rein visuelle Fettung — dafür CSS", "Hat semantische Bedeutung für Screenreader"],
+    ["<em>", "<em>Text</em>", "Betont Text, wird kursiv dargestellt", "Betonungen, fremdsprachliche Begriffe", "<p>Das ist <em>wirklich</em> wichtig.</p>", "Nicht für rein visuelle Kursivierung", "Semantischer Unterschied zu <i>"],
+    ["<br>", "<br>", "Erzwingt einen Zeilenumbruch (void element)", "Adressen, Gedichte, wo Umbruch nötig ist", "<p>Zeile 1<br>Zeile 2</p>", "Nicht für Abstände verwenden (CSS nutzen)", "Self-closing, kein schließender Tag"],
+    ["<hr>", "<hr>", "Horizontale Trennlinie (void element)", "Thematische Trennung", "<section>...<hr>...</section>", "Nicht für rein dekorative Trennlinien (CSS)", "Hat semantische Bedeutung (Thema wechselt)"],
+    ["<blockquote>", "<blockquote cite=\"URL\">Zitat</blockquote>", "Längeres eingerücktes Zitat", "Buchzitate, Testimonials", "<blockquote>\"Ich denke, also bin ich.\"</blockquote>", "Für kurze Zitate <q> verwenden", "cite-Attribut für Quellenangabe"],
+    ["<pre>", "<pre>Vorformatierter Text</pre>", "Zeigt Text mit allen Leerzeichen und Umbrüchen an", "Code-Ausgaben, ASCII-Art", "<pre>    eingerückt</pre>", "Überschreitet Container-Breite wenn zu lang", "Oft mit <code> kombiniert"],
+  ],
+  "Listen": [
+    ["<ul>", "<ul>...</ul>", "Ungeordnete Liste mit Aufzählungspunkten", "Auflistungen ohne Reihenfolge", "<ul>\n  <li>Punkt 1</li>\n  <li>Punkt 2</li>\n</ul>", "Nur <li> als direkte Kinder erlaubt", "Standard-Bullet-Symbol durch CSS änderbar"],
+    ["<ol>", "<ol>...</ol>", "Geordnete, nummerierte Liste", "Schritt-für-Schritt-Anleitungen", "<ol>\n  <li>Schritt 1</li>\n  <li>Schritt 2</li>\n</ol>", "Typ änderbar: type=\"A\" für Buchstaben", "start-Attribut ändert Startnummer"],
+    ["<li>", "<li>Listenpunkt</li>", "Einzelner Listenpunkt in ul oder ol", "Immer innerhalb von ul oder ol", "<ul><li>Apfel</li><li>Banane</li></ul>", "Darf nicht außerhalb ul/ol stehen", "Kann verschachtelte Listen enthalten"],
+    ["<dl>", "<dl>...</dl>", "Definitionsliste für Begriff-Erklärung-Paare", "Glossare, FAQ", "<dl>\n  <dt>HTML</dt>\n  <dd>Auszeichnungssprache</dd>\n</dl>", "Nur dt und dd als Kinder erlaubt", "Seltener, aber semantisch wertvoll"],
+  ],
+  "Links & Navigation": [
+    ["<a href>", "<a href=\"URL\">Linktext</a>", "Erstellt einen Hyperlink", "Navigation, Verweise auf externe Seiten", "<a href=\"https://example.com\">Besuche uns</a>", "href fehlt: Kein Link, nur Stil", "target=\"_blank\" öffnet neuen Tab"],
+    ["<a target>", "<a href=\"URL\" target=\"_blank\">Text</a>", "Öffnet den Link in einem neuen Tab/Fenster", "Externe Links, die nicht die aktuelle Seite ersetzen sollen", "<a href=\"https://google.com\" target=\"_blank\">Google</a>", "Ohne rel=\"noopener\" gibt es Sicherheitslücken", "Immer rel=\"noopener noreferrer\" hinzufügen"],
+    ["<a rel>", "<a href=\"URL\" rel=\"noopener noreferrer\">Text</a>", "Definiert die Beziehung zur verlinkten Seite", "Sicherheit bei target=\"_blank\"", "<a href=\"ext.com\" target=\"_blank\" rel=\"noopener\">Link</a>", "Fehlt bei _blank: Sicherheitsrisiko (Tabnabbing)", "Immer bei externen Links mit _blank verwenden"],
+    ["<nav>", "<nav>...</nav>", "Semantisches Navigationselement", "Hauptnavigation, Breadcrumbs", "<nav><a href=\"/\">Start</a> | <a href=\"/info\">Info</a></nav>", "Nicht für alle Linkgruppen verwenden", "Hilft Screenreadern, Navigation zu überspringen"],
+  ],
+  "Bilder & Medien": [
+    ["<img>", "<img src=\"bild.jpg\" alt=\"Beschreibung\">", "Bindet ein Bild ein (void element)", "Bilder in Webseiten", "<img src=\"logo.png\" alt=\"Firmenlogo\" width=\"200\">", "Fehlendes alt verletzt Barrierefreiheit", "Immer alt-Attribut, immer width/height für Layout-Stabilität"],
+    ["<img alt>", "alt=\"Beschreibung\"", "Alternativer Text falls Bild nicht lädt oder für Screenreader", "Barrierefreiheit, SEO", "<img src=\"katze.jpg\" alt=\"Schwarze Katze schläft\">", "Leeres alt=\"\" nur für rein dekorative Bilder", "Beschreibt, was im Bild zu sehen ist"],
+    ["<figure>", "<figure>...</figure>", "Semantischer Container für Bilder mit Beschriftung", "Bilder mit Bildunterschrift", "<figure>\n  <img src=\"bild.jpg\" alt=\"Alt\">\n  <figcaption>Beschriftung</figcaption>\n</figure>", "figcaption muss direkt im figure stehen", "Verbessert Semantik und SEO"],
+    ["<figcaption>", "<figcaption>Text</figcaption>", "Bildunterschrift zu einem figure-Element", "Immer innerhalb von <figure>", "<figcaption>Sonnenuntergang am Meer</figcaption>", "Nur innerhalb von <figure> verwenden", "Kann vor oder nach img stehen"],
+    ["<video>", "<video src=\"film.mp4\" controls></video>", "Bindet ein Video ein", "Videoinhalte auf Webseiten", "<video width=\"640\" height=\"360\" controls>\n  <source src=\"video.mp4\" type=\"video/mp4\">\n</video>", "Autoplay ohne muted blockiert Autoplay-Policy", "controls-Attribut für Bedienelemente"],
+    ["<audio>", "<audio src=\"musik.mp3\" controls></audio>", "Bindet eine Audiodatei ein", "Musik, Podcasts, Sprachausgaben", "<audio controls>\n  <source src=\"lied.mp3\" type=\"audio/mpeg\">\n</audio>", "Autoplay wird von Browsern meist blockiert", "Alternativtext zwischen den Tags für ältere Browser"],
+    ["<source>", "<source src=\"datei.mp4\" type=\"video/mp4\">", "Definiert alternative Medienquellen", "Fallback-Formate für Video/Audio", "<video><source src=\"v.mp4\" type=\"video/mp4\"><source src=\"v.webm\" type=\"video/webm\"></video>", "type-Attribut unbedingt angeben", "Browser wählt erstes unterstütztes Format"],
+    ["<iframe>", "<iframe src=\"URL\" title=\"Beschreibung\"></iframe>", "Bindet eine externe Webseite ein", "YouTube-Videos, Google Maps", "<iframe src=\"https://www.youtube.com/embed/xyz\" title=\"Video\"></iframe>", "Sicherheitsrisiko — nur vertrauenswürdige Quellen einbetten", "title-Attribut für Barrierefreiheit"],
+  ],
+  "Tabellen": [
+    ["<table>", "<table>...</table>", "Container für tabellarische Daten", "Daten in Zeilen und Spalten", "<table border=\"1\">\n  <tr><th>Name</th><th>Alter</th></tr>\n  <tr><td>Anna</td><td>28</td></tr>\n</table>", "Nicht für Layouts verwenden (CSS Flexbox/Grid)", "Immer mit thead, tbody, tfoot strukturieren"],
+    ["<tr>", "<tr>...</tr>", "Tabellenzeile (table row)", "Jede Zeile der Tabelle", "<tr><td>Inhalt</td></tr>", "Darf nur th oder td als Kinder haben", "Direkt innerhalb table, thead, tbody oder tfoot"],
+    ["<th>", "<th>Spaltenüberschrift</th>", "Tabellenkopfzelle, fett und zentriert", "Spalten- oder Zeilenbezeichnungen", "<tr><th>Name</th><th>Wert</th></tr>", "scope-Attribut für Barrierefreiheit angeben", "scope=\"col\" für Spalten, scope=\"row\" für Zeilen"],
+    ["<td>", "<td>Zelleninhalt</td>", "Normale Tabellendatenzelle", "Alle Datenzellen der Tabelle", "<tr><td>Anna</td><td>28</td></tr>", "colspan/rowspan für verbundene Zellen", "Kann beliebige HTML-Elemente enthalten"],
+    ["<thead>", "<thead>...</thead>", "Semantischer Tabellenkopf-Bereich", "Spaltenüberschriften zusammenfassen", "<thead><tr><th>Spalte 1</th></tr></thead>", "Fehlt oft, verbessert aber Semantik", "Wiederholt sich beim Drucken langer Tabellen"],
+    ["<tbody>", "<tbody>...</tbody>", "Semantischer Tabellenkörper-Bereich", "Datenzellen zusammenfassen", "<tbody><tr><td>Daten</td></tr></tbody>", "Kann mehrfach in einer Tabelle vorkommen", "Browser fügt implizit tbody ein wenn es fehlt"],
+    ["colspan", "<td colspan=\"2\">Breit</td>", "Lässt eine Zelle mehrere Spalten überspannen", "Verbundene Zellen horizontal", "<td colspan=\"3\">Überspannt 3 Spalten</td>", "colspan-Wert darf Spaltenanzahl nicht überschreiten", "Gesamtzahl der Zellen pro Zeile muss gleich bleiben"],
+    ["rowspan", "<td rowspan=\"2\">Hoch</td>", "Lässt eine Zelle mehrere Zeilen überspannen", "Verbundene Zellen vertikal", "<td rowspan=\"2\">Überspannt 2 Zeilen</td>", "Nächste Zeile muss entsprechend Zellen weglassen", "Kann Tabellenstruktur unübersichtlich machen"],
+  ],
+  "Formulare": [
+    ["<form>", "<form action=\"/senden\" method=\"post\">...</form>", "Container für Formularelemente", "Login, Kontaktformulare, Suche", "<form action=\"senden.php\" method=\"post\">\n  ...\n</form>", "Fehlende action sendet an aktuelle URL", "method=\"post\" für sensible Daten"],
+    ["<input text>", "<input type=\"text\" name=\"name\" placeholder=\"...\">", "Einzeiliges Texteingabefeld", "Namen, Adressen, Suchfelder", "<input type=\"text\" name=\"vorname\" placeholder=\"Vorname\">", "Ohne name-Attribut wird Wert nicht übermittelt", "Immer mit <label> kombinieren"],
+    ["<input email>", "<input type=\"email\" name=\"email\">", "E-Mail-Eingabefeld mit automatischer Validierung", "E-Mail-Adressen erfassen", "<input type=\"email\" name=\"email\" required>", "Validiert Format, aber nicht Existenz der Adresse", "Browser zeigt passendes Keyboard auf Mobil"],
+    ["<input password>", "<input type=\"password\" name=\"passwort\">", "Passwortfeld — Eingabe wird verborgen", "Login-Formulare", "<input type=\"password\" name=\"pw\" minlength=\"8\">", "Niemals Passwörter im Klartext speichern!", "minlength für Mindestlänge-Validierung"],
+    ["<input checkbox>", "<input type=\"checkbox\" name=\"agb\" value=\"ja\">", "Kontrollkästchen für Ja/Nein-Auswahl", "AGB-Zustimmung, Mehrfachauswahl", "<input type=\"checkbox\" name=\"newsletter\" id=\"nl\">\n<label for=\"nl\">Newsletter</label>", "checked-Attribut für vorausgewählte Option", "Mehrere Checkboxen können denselben name haben"],
+    ["<input radio>", "<input type=\"radio\" name=\"farbe\" value=\"blau\">", "Radiobutton — nur eine Auswahl aus Gruppe möglich", "Geschlecht, Zahlungsmethode", "<input type=\"radio\" name=\"anrede\" value=\"herr\"> Herr\n<input type=\"radio\" name=\"anrede\" value=\"frau\"> Frau", "Alle Optionen müssen denselben name haben", "checked-Attribut für Standardwahl"],
+    ["<input submit>", "<input type=\"submit\" value=\"Absenden\">", "Absenden-Button für das Formular", "Formulare abschicken", "<input type=\"submit\" value=\"Jetzt anmelden\">", "Ohne Formular-Kontext funktioniert der Button nicht", "Alternativ <button type=\"submit\"> verwenden"],
+    ["<textarea>", "<textarea name=\"nachricht\" rows=\"5\"></textarea>", "Mehrzeiliges Texteingabefeld", "Nachrichten, Kommentare, Beschreibungen", "<textarea name=\"kommentar\" rows=\"4\" cols=\"50\">Vorausgefüllt</textarea>", "Kein value-Attribut — Inhalt zwischen Tags", "rows und cols setzen Standardgröße"],
+    ["<select>", "<select name=\"land\"><option value=\"de\">Deutschland</option></select>", "Auswahlmenü (Dropdown)", "Länder, Kategorien, Prioritäten", "<select name=\"groesse\">\n  <option value=\"s\">Small</option>\n  <option value=\"m\" selected>Medium</option>\n</select>", "Immer <option>-Elemente als Kinder", "multiple-Attribut für Mehrfachauswahl"],
+    ["<label>", "<label for=\"feldid\">Bezeichnung</label>", "Beschriftung für Formularelemente — verknüpft mit input", "Alle Formularfelder sollten Labels haben", "<label for=\"email\">E-Mail-Adresse:</label>\n<input type=\"email\" id=\"email\">", "for-Attribut muss mit id des Inputs übereinstimmen", "Klick auf Label aktiviert das Eingabefeld"],
+    ["<button>", "<button type=\"submit\">Klick mich</button>", "Klickbarer Button", "Formulare abschicken, Aktionen auslösen", "<button type=\"button\" onclick=\"aktion()\">Los</button>", "Standardtyp ist submit — kann Formular unbeabsichtigt absenden", "type immer explizit angeben"],
+    ["<fieldset>", "<fieldset>...</fieldset>", "Gruppiert zusammengehörige Formularfelder", "Adressfelder, Zahlungsinfos gruppieren", "<fieldset>\n  <legend>Persönliche Daten</legend>\n  <input ...>\n</fieldset>", "Ohne <legend> fehlt die Gruppenbezeichnung", "Verbessert Barrierefreiheit und Übersicht"],
+    ["required", "<input type=\"text\" required>", "Macht ein Formularfeld zur Pflichtangabe", "Name, E-Mail, AGB-Zustimmung", "<input type=\"text\" name=\"name\" required>", "Kann durch JavaScript umgangen werden — serverseitige Validierung nötig", "Browser zeigt automatische Fehlermeldung"],
+    ["placeholder", "<input placeholder=\"Hinweistext\">", "Grauer Hinweistext im leeren Eingabefeld", "Beispieleingaben zeigen", "<input type=\"text\" placeholder=\"Max Mustermann\">", "Ersetzt nicht das Label — beide zusammen verwenden", "Verschwindet beim Tippen"],
+  ],
+  "Semantische Strukturelemente": [
+    ["<header>", "<header>...</header>", "Kopfbereich einer Seite oder eines Abschnitts", "Site-Header, Artikel-Header", "<header>\n  <nav>...</nav>\n  <h1>Logo</h1>\n</header>", "Nicht mit <head> verwechseln", "Kann mehrfach pro Seite vorkommen"],
+    ["<footer>", "<footer>...</footer>", "Fußbereich einer Seite oder eines Abschnitts", "Copyright, Links, Kontaktinfos", "<footer>\n  <p>&copy; 2024 Firma</p>\n</footer>", "Nicht mit CSS-fixed-Footer verwechseln", "Kann in section oder article stehen"],
+    ["<main>", "<main>...</main>", "Hauptinhalt der Seite — einmalig", "Zentraler Seiteninhalt", "<main>\n  <article>...</article>\n</main>", "Nur einmal pro Seite verwenden", "Hilft Screenreadern, direkt zum Inhalt zu springen"],
+    ["<section>", "<section>...</section>", "Thematisch zusammengehöriger Abschnitt mit Überschrift", "Blogbereiche, Produktkategorien", "<section>\n  <h2>Über uns</h2>\n  <p>...</p>\n</section>", "Ohne Überschrift besser <div> verwenden", "Verbessert Dokumentstruktur und SEO"],
+    ["<article>", "<article>...</article>", "In sich geschlossener, wiederverwendbarer Inhalt", "Blogbeiträge, Nachrichtenartikel, Kommentare", "<article>\n  <h2>Blogtitel</h2>\n  <p>Inhalt...</p>\n</article>", "Nicht für beliebige Inhaltsblöcke", "Könnte eigenständig im Feed erscheinen"],
+    ["<aside>", "<aside>...</aside>", "Ergänzender Nebeninhalt", "Seitenleisten, Werbung, Verwandte Links", "<aside>\n  <h3>Auch interessant</h3>\n  <ul>...</ul>\n</aside>", "Nicht für wesentliche Inhalte", "Kann außerhalb oder innerhalb von article stehen"],
+    ["<div>", "<div class=\"container\">...</div>", "Generischer Block-Container ohne Semantik", "Layout-Struktur, CSS-Hooks", "<div class=\"karte\">\n  <p>Inhalt</p>\n</div>", "Kein semantischer Wert — semantische Tags bevorzugen", "Unsichtbar, nur für Styling und Strukturierung"],
+    ["<span>", "<span class=\"highlight\">Text</span>", "Generischer Inline-Container ohne Semantik", "Teile von Text stylen", "<p>Das ist <span class=\"rot\">wichtig</span>.</p>", "Kein semantischer Wert", "Inline-Äquivalent zu <div>"],
+    ["<details>", "<details>...</details>", "Aufklappbares Inhaltselement", "FAQ, Zusatzinfos, Spoiler", "<details>\n  <summary>Mehr erfahren</summary>\n  <p>Verborgener Inhalt</p>\n</details>", "Ohne <summary> zeigt Browser Standardtext", "open-Attribut hält es standardmäßig geöffnet"],
+    ["<summary>", "<summary>Zusammenfassung</summary>", "Sichtbare Überschrift für <details>", "Nur innerhalb von <details>", "<details><summary>Klick mich</summary><p>Inhalt</p></details>", "Immer erstes Kind von <details>", "Klickbar und per Tastatur bedienbar"],
+    ["<time>", "<time datetime=\"2024-01-15\">15. Januar 2024</time>", "Maschinenlesbare Zeitangabe", "Datumsanzeigen, Event-Termine", "<time datetime=\"2024-06-21T14:00\">21. Juni, 14 Uhr</time>", "datetime-Format muss ISO 8601 entsprechen", "Hilft Suchmaschinen und Screenreadern"],
+    ["<address>", "<address>...</address>", "Kontaktinformationen für Dokument oder Artikel", "Anschriften, Kontaktdaten", "<address>\n  <p>Max Mustermann, Berlin</p>\n</address>", "Nicht für Postanschriften ohne Bezug zum Inhalt", "Wird von Browsern kursiv dargestellt"],
+    ["<mark>", "<mark>Hervorgehobener Text</mark>", "Hebt Text mit Hintergrundfarbe hervor", "Suchergebnisse, wichtige Passagen", "<p>Das <mark>Wichtige</mark> im Satz.</p>", "Nicht für Styling — dafür CSS mit span", "Semantische Markierung, nicht rein dekorativ"],
+    ["<abbr>", "<abbr title=\"HyperText Markup Language\">HTML</abbr>", "Markiert Abkürzungen mit vollem Wortlaut", "Fachbegriffe und Abkürzungen erklären", "<abbr title=\"Cascading Style Sheets\">CSS</abbr>", "title-Attribut immer angeben", "Beim Hovern erscheint der volle Begriff"],
+    ["<code>", "<code>print(\"Hallo\")</code>", "Inline-Code-Formatierung", "Code-Schnipsel in Fließtext", "<p>Benutze <code>print()</code> für Ausgaben.</p>", "Für mehrzeiligen Code <pre><code> kombinieren", "Wird in Monospace-Schrift angezeigt"],
+  ],
+  "CSS-Grundlagen in HTML": [
+    ["style-Attribut", "<p style=\"color: red;\">Text</p>", "Inline-CSS direkt im Element", "Schnelle einzelne Anpassungen", "<h1 style=\"color: blue; font-size: 2em;\">Titel</h1>", "Schwer zu warten und zu überschreiben", "Nur für einmalige Anpassungen — sonst externe CSS"],
+    ["class-Attribut", "<div class=\"karte gross\">...</div>", "Verknüpft Element mit CSS-Klassen", "Styling, JavaScript-Selektion", "<p class=\"intro fett\">Text</p>", "Mehrere Klassen durch Leerzeichen trennen", "Gleiche Klasse an beliebig vielen Elementen"],
+    ["id-Attribut", "<div id=\"header\">...</div>", "Eindeutiger Bezeichner für ein Element", "Anker-Links, JavaScript, CSS", "<section id=\"kontakt\">Kontakt</section>", "Muss auf der Seite einmalig sein!", "Für Sprungziele und JavaScript-Zugriff"],
+  ],
+};
+
+// Python Reference entries (200 entries grouped by category)
+const pythonCategories = {
+  "Grundlegende Syntax": [
+    ["print()", "print(wert)", "Gibt Werte in der Konsole aus", "Debugging, Benutzerausgaben", "print(\"Hallo, Welt!\")\nprint(3 + 4)\nprint(f\"Name: {name}\")", "Fehlender Zeilenumbruch: end=\"\" verwenden", "print() gibt immer einen Zeilenumbruch aus — mit end=\"\" unterdrücken"],
+    ["input()", "eingabe = input(\"Prompt: \")", "Liest Benutzereingabe als String ein", "Interaktive Programme", "name = input(\"Name: \")\nalter = int(input(\"Alter: \"))", "Immer String! Bei Zahlen: int() oder float() verwenden", "input() wartet, bis Enter gedrückt wird"],
+    ["type()", "type(wert)", "Gibt den Datentyp eines Wertes zurück", "Typüberprüfung, Debugging", "print(type(42))    # <class 'int'>\nprint(type(\"Hi\"))  # <class 'str'>", "Gibt Klasse zurück, nicht Typname", "Mit isinstance() für Typprüfung in Code"],
+    ["len()", "len(sequenz)", "Gibt die Länge einer Sequenz zurück", "Strings, Listen, Tupel, Dicts", "print(len(\"Hallo\"))  # 5\nprint(len([1,2,3]))   # 3", "Bei None: TypeError", "Für Strings: Anzahl der Zeichen (nicht Bytes)"],
+    ["range()", "range(start, stop, step)", "Erzeugt eine Zahlensequenz", "for-Schleifen, Indexzugriffe", "for i in range(5):      # 0,1,2,3,4\nfor i in range(2,8,2):  # 2,4,6", "stop ist exklusiv (range(5) = 0 bis 4)", "range() erzeugt keinen Speicher — effizient bei großen Zahlen"],
+    ["pass", "pass", "Platzhalter — tut nichts", "Leere Funktionen, Klassen, Blöcke", "def noch_leer():\n    pass  # später füllen", "Python erlaubt keine leeren Blöcke", "Nützlich beim schrittweisen Entwickeln"],
+    ["#", "# Kommentar", "Einzeiliger Kommentar — wird ignoriert", "Code erklären, Zeilen deaktivieren", "# Berechne Summe\nergebnis = a + b  # Summe", "Kein mehrzeiliger Kommentar in Python (nur \"\"\" Strings)", "Kommentiere das Warum, nicht das Was"],
+    ["\"\"\"docstring\"\"\"", "\"\"\"Beschreibung\"\"\"", "Dokumentationsstring für Module, Klassen, Funktionen", "API-Dokumentation, help()", "def add(a, b):\n    \"\"\"Addiert zwei Zahlen.\"\"\"\n    return a + b", "Nicht dasselbe wie Kommentar — wird gespeichert", "help(funktion) gibt den Docstring aus"],
+  ],
+  "Variablen & Datentypen": [
+    ["int", "zahl = 42", "Ganze Zahl, beliebig groß in Python", "Zähler, Indizes, Ganzzahlberechnungen", "alter = 25\nbevoelkerung = 8_000_000_000", "Division zweier int gibt float zurück", "Underscores für Lesbarkeit: 1_000_000"],
+    ["float", "komma = 3.14", "Dezimalzahl (Gleitkomma, 64-bit)", "Berechnungen mit Dezimalstellen", "preis = 19.99\npi = 3.14159", "Rundungsfehler: 0.1 + 0.2 != 0.3", "Für genaue Berechnungen: decimal-Modul"],
+    ["str", "text = \"Hallo\"", "Unveränderliche Zeichenkette", "Text verarbeiten und anzeigen", "name = \"Anna\"\nbegruessung = 'Hallo, ' + name", "Strings sind immutable — Operationen erstellen neuen String", "Einfache und doppelte Anführungszeichen gleichwertig"],
+    ["bool", "flag = True", "Wahrheitswert: True oder False", "Bedingungen, Schalter", "aktiv = True\nfertig = (fortschritt == 100)", "True == 1 und False == 0 (numerisch)", "Groß geschrieben: True, False (nicht true/false)"],
+    ["list", "lst = [1, 2, 3]", "Geordnete, veränderliche Sammlung beliebiger Typen", "Sammlungen von Daten verwalten", "zahlen = [1, 2, 3]\nnamen = [\"Anna\", \"Max\"]\ngemischt = [1, \"text\", True]", "Index out of range wenn zu großer Index", "lst.append(), lst.remove(), lst.sort() usw."],
+    ["tuple", "tpl = (1, 2, 3)", "Geordnete, unveränderliche Sammlung", "Koordinaten, feste Wertegruppen", "punkt = (10, 20)\nfarbe = (255, 128, 0)", "Einelementiges Tuple: (1,) — Komma nötig!", "Unveränderlich = sicher als Dictionary-Schlüssel"],
+    ["dict", "d = {\"key\": wert}", "Schlüssel-Wert-Paare (Hash-Map)", "Datensätze, Konfigurationen", "person = {\"name\": \"Anna\", \"alter\": 28}\nperson[\"name\"]  # Anna", "KeyError wenn Schlüssel nicht existiert", "dict.get(key, default) ist sicherer als direkter Zugriff"],
+    ["set", "s = {1, 2, 3}", "Ungeordnete Sammlung eindeutiger Elemente", "Duplikate entfernen, Mengenlehre", "farben = {\"rot\", \"blau\", \"grün\"}\nprint(len({1,1,2}))  # 2", "Kein Index-Zugriff (ungeordnet)", "set() erzeugt leeres Set ({} erzeugt leeres Dict)"],
+    ["None", "wert = None", "Repräsentiert das Fehlen eines Wertes", "Standardrückgabe, optionale Parameter", "ergebnis = None\nif ergebnis is None:\n    print(\"Noch kein Ergebnis\")", "Vergleich mit is None, nicht == None", "Funktionen ohne return geben None zurück"],
+    ["str()", "str(wert)", "Konvertiert Wert in String", "Zahlen für Ausgabe umwandeln", "alter = 28\nnachricht = \"Ich bin \" + str(alter)", "TypeError ohne Konvertierung bei + mit anderem Typ", "f-Strings sind eleganter: f\"Ich bin {alter}\""],
+    ["int()", "int(wert)", "Konvertiert Wert in Integer", "user-Eingaben umwandeln", "eingabe = input(\"Zahl: \")\nzahl = int(eingabe)", "ValueError bei nicht-numerischen Strings", "int(3.9) schneidet ab: ergibt 3 (kein Runden)"],
+    ["float()", "float(wert)", "Konvertiert Wert in Dezimalzahl", "Berechnungen mit Dezimalstellen", "preis = float(input(\"Preis: \"))", "ValueError bei nicht-numerischen Strings", "float('inf') und float('nan') sind gültig"],
+    ["f-String", "f\"Text {variable}\"", "Formatierter String mit eingebetteten Ausdrücken", "Text mit Variablen kombinieren", "name = \"Anna\"\nalter = 28\nprint(f\"{name} ist {alter} Jahre alt.\")", "Geschweifte Klammern müssen paarweise vorkommen", "Ausdrücke möglich: f\"{preis * 1.19:.2f}\""],
+  ],
+  "Listen-Methoden": [
+    ["list.append()", "liste.append(element)", "Fügt Element am Ende der Liste hinzu", "Elemente zu Liste hinzufügen", "zahlen = [1, 2]\nzahlen.append(3)\nprint(zahlen)  # [1, 2, 3]", "append() gibt None zurück (in-place)", "Gibt immer None zurück — nicht zuweisen"],
+    ["list.insert()", "liste.insert(index, element)", "Fügt Element an bestimmter Position ein", "Element mitten in Liste einfügen", "namen = [\"A\", \"C\"]\nnamen.insert(1, \"B\")\nprint(namen)  # ['A', 'B', 'C']", "Zu großer Index fügt am Ende ein", "Verschiebt alle nachfolgenden Elemente"],
+    ["list.remove()", "liste.remove(wert)", "Entfernt erstes Vorkommen des Wertes", "Bestimmten Wert löschen", "zahlen = [1, 2, 3, 2]\nzahlen.remove(2)\nprint(zahlen)  # [1, 3, 2]", "ValueError wenn Wert nicht vorhanden", "Entfernt nur erstes Vorkommen"],
+    ["list.pop()", "liste.pop(index)", "Entfernt und gibt Element zurück", "Letztes oder bestimmtes Element holen", "zahlen = [1, 2, 3]\nletztes = zahlen.pop()    # 3\nerstes = zahlen.pop(0)   # 1", "IndexError bei leerem Index", "Ohne Argument: letztes Element"],
+    ["list.sort()", "liste.sort(key=None, reverse=False)", "Sortiert Liste in-place", "Liste alphabetisch oder numerisch sortieren", "zahlen = [3,1,4,1,5]\nzahlen.sort()\nzahlen.sort(reverse=True)  # absteigende Reihenfolge", "Gemischte Typen verursachen TypeError", "sorted() gibt neue Liste zurück (nicht in-place)"],
+    ["list.reverse()", "liste.reverse()", "Kehrt Reihenfolge der Liste um (in-place)", "Liste rückwärts durchlaufen", "lst = [1, 2, 3]\nlst.reverse()\nprint(lst)  # [3, 2, 1]", "Gibt None zurück, nicht die Liste", "lst[::-1] erstellt neue umgekehrte Liste"],
+    ["list.index()", "liste.index(wert)", "Gibt Index des ersten Vorkommens zurück", "Position eines Elements finden", "farben = [\"rot\", \"blau\"]\npos = farben.index(\"blau\")  # 1", "ValueError wenn Wert nicht in Liste", "Nur erstes Vorkommen"],
+    ["list.count()", "liste.count(wert)", "Zählt Vorkommen eines Wertes", "Häufigkeit eines Elements prüfen", "lst = [1, 2, 2, 3]\nprint(lst.count(2))  # 2", "Gibt 0 zurück wenn nicht vorhanden", "Für komplexere Zählungen: Counter aus collections"],
+    ["list comprehension", "[ausdruck for var in seq]", "Kompakte Liste aus einer Sequenz erzeugen", "Listen transformieren und filtern", "quadrate = [x**2 for x in range(5)]\ngerade = [x for x in range(10) if x % 2 == 0]", "Bei komplexer Logik: normale Schleife besser", "Effizienter und pythonischer als Schleife mit append"],
+    ["slicing", "liste[start:stop:step]", "Gibt Teilbereich der Liste zurück", "Teillisten extrahieren", "lst = [1,2,3,4,5]\nprint(lst[1:3])   # [2, 3]\nprint(lst[::2])   # [1, 3, 5]", "Indizes dürfen größer als Länge sein (kein Fehler)", "lst[:] erstellt flache Kopie der Liste"],
+  ],
+  "String-Methoden": [
+    ["str.upper()", "text.upper()", "Wandelt String in Großbuchstaben um", "Vergleiche, Formatierung", "print(\"hallo\".upper())  # HALLO", "Gibt neuen String zurück, original unverändert", "Vergleiche case-insensitiv: a.upper() == b.upper()"],
+    ["str.lower()", "text.lower()", "Wandelt String in Kleinbuchstaben um", "Case-insensitive Vergleiche", "eingabe = input().lower()", "Gibt neuen String zurück", "Standard für Vergleiche: immer lower()"],
+    ["str.strip()", "text.strip()", "Entfernt Leerzeichen von beiden Seiten", "Benutzereingaben bereinigen", "eingabe = \"  Hallo  \".strip()  # 'Hallo'", "lstrip()/rstrip() für einseitiges Entfernen", "Entfernt auch \\n und \\t"],
+    ["str.split()", "text.split(trennzeichen)", "Teilt String in Liste auf", "CSV-Daten, Wörter trennen", "wörter = \"a b c\".split()       # ['a','b','c']\nteile = \"a,b,c\".split(',')  # ['a','b','c']", "split() ohne Argument trennt bei Whitespace", "Gegenteil: str.join()"],
+    ["str.join()", "trennzeichen.join(liste)", "Verbindet Listenelemente zu einem String", "Listen zu Text zusammenfügen", "wörter = ['Hallo', 'Welt']\nprint(' '.join(wörter))  # Hallo Welt\nprint(','.join(wörter))  # Hallo,Welt", "Alle Listenelemente müssen Strings sein", "Effizienter als + in Schleife"],
+    ["str.replace()", "text.replace(alt, neu)", "Ersetzt alle Vorkommen eines Teilstrings", "Text bereinigen, Wörter tauschen", "text = \"Hallo Welt\"\nneu = text.replace(\"Welt\", \"Python\")", "Gibt neuen String zurück", "replace(alt, neu, anzahl) begrenzt Ersetzungen"],
+    ["str.find()", "text.find(suchstring)", "Gibt Index des ersten Vorkommens oder -1 zurück", "Teilstring suchen ohne Exception", "pos = \"Hallo\".find(\"ll\")  # 2\npos = \"Hallo\".find(\"xy\")  # -1", "-1 wenn nicht gefunden (kein Fehler)", "Gegenstück: str.index() wirft ValueError"],
+    ["str.startswith()", "text.startswith(prefix)", "Prüft ob String mit Prefix beginnt", "Dateiendungen, URL-Prüfung", "url = \"https://...\"\nif url.startswith(\"https\"):\n    print(\"Sicher\")", "Groß-/Kleinschreibung beachten", "Gibt True oder False zurück"],
+    ["str.format()", "\"Text {0}\".format(wert)", "Formatiert String mit eingesetzten Werten", "Ältere Alternative zu f-Strings", "\"Hallo, {}!\".format(name)\n\"{0} + {1} = {2}\".format(3, 4, 7)", "Weniger lesbar als f-Strings", "f-Strings (Python 3.6+) bevorzugen"],
+    ["in-Operator (str)", "teilstring in text", "Prüft ob Teilstring enthalten ist", "Schlüsselwortsuche", "if \"python\" in text.lower():\n    print(\"Gefunden\")", "Groß-/Kleinschreibung sensitiv", "Gibt True oder False zurück"],
+  ],
+  "Dictionary-Methoden": [
+    ["dict.get()", "d.get(key, default)", "Gibt Wert zurück, ohne KeyError zu werfen", "Sicherer Zugriff auf unbekannte Keys", "person = {\"name\": \"Anna\"}\nalter = person.get(\"alter\", 0)  # 0 wenn nicht vorhanden", "Standardwert ist None wenn nicht angegeben", "Immer get() statt [key] bei unbekannten Keys"],
+    ["dict.keys()", "d.keys()", "Gibt alle Schlüssel als View zurück", "Über alle Schlüssel iterieren", "for key in person.keys():\n    print(key)", "View ist live — ändert sich mit Dict", "list(d.keys()) für echte Liste"],
+    ["dict.values()", "d.values()", "Gibt alle Werte als View zurück", "Über alle Werte iterieren", "for wert in person.values():\n    print(wert)", "View ist live", "list(d.values()) für echte Liste"],
+    ["dict.items()", "d.items()", "Gibt Schlüssel-Wert-Paare als View zurück", "Gleichzeitig über Key und Value iterieren", "for key, wert in person.items():\n    print(f\"{key}: {wert}\")", "Destrukturierung in Schleife ist pythonisch", "Effizienter als separates .keys() und Zugriff"],
+    ["dict.update()", "d.update(anderes_dict)", "Fügt oder überschreibt Einträge", "Dicts zusammenführen", "einstellungen = {\"debug\": False}\neinstellungen.update({\"debug\": True, \"neu\": 1})", "Bestehende Keys werden überschrieben", "Ab Python 3.9: d1 | d2 für neues kombiniertes Dict"],
+    ["dict.pop()", "d.pop(key, default)", "Entfernt und gibt Wert zurück", "Eintrag aus Dict entfernen", "wert = person.pop(\"alter\")  # Entfernt und gibt zurück\nwert = d.pop(\"xy\", None)    # Kein Fehler", "KeyError ohne default wenn Key fehlt", "Mit default-Argument sicher verwenden"],
+    ["dict comprehension", "{k: v for k, v in ...}", "Kompaktes Dict aus Sequenz erstellen", "Dicts transformieren", "quadrate = {x: x**2 for x in range(5)}\n# {0:0, 1:1, 2:4, 3:9, 4:16}", "Schlüssel müssen eindeutig sein", "Sehr leistungsfähig für Datentransformation"],
+  ],
+  "Kontrollstrukturen": [
+    ["if/elif/else", "if bed:\n    ...\nelif bed2:\n    ...\nelse:\n    ...", "Bedingte Verzweigung", "Entscheidungen im Programm", "alter = 18\nif alter >= 18:\n    print(\"Volljährig\")\nelse:\n    print(\"Minderjährig\")", "Einrückung vergessen: IndentationError", "elif statt else if (Python-Syntax)"],
+    ["for-Schleife", "for var in iterable:", "Iteriert über eine Sequenz", "Listen, Strings, Ranges durchlaufen", "for frucht in [\"Apfel\", \"Birne\"]:\n    print(frucht)", "Laufvariable nicht innerhalb Schleife ändern", "range() für Zahlenbereich"],
+    ["while-Schleife", "while bedingung:", "Wiederholt Block solange Bedingung wahr", "Eingaben bis gültige Antwort, Spielschleifen", "eingabe = \"\"\nwhile eingabe == \"\":\n    eingabe = input(\"Eingabe: \")", "Immer auf Endlosschleife prüfen", "while True: + break ist gängiges Muster"],
+    ["break", "break", "Beendet Schleife sofort", "Schleife bei Fundbedingung verlassen", "for i in range(100):\n    if i == 10:\n        break  # Schleife verlassen", "Nur aus innerster Schleife", "Oft mit while True: kombiniert"],
+    ["continue", "continue", "Überspringt aktuellen Durchlauf", "Bestimmte Werte überspringen", "for i in range(10):\n    if i % 2 == 0:\n        continue\n    print(i)  # Nur ungerade", "Erhöht Code-Komplexität", "Oft klarer durch Bedingung in Schleifenrumpf"],
+    ["Ternärer Ausdruck", "wert_wenn_true if bedingung else wert_wenn_false", "Einzeiliger bedingter Ausdruck", "Einfache Zuweisungen basierend auf Bedingung", "status = \"Ja\" if aktiv else \"Nein\"\npreis = basis * 0.8 if rabatt else basis", "Zu komplex wenn verschachtelt", "Nur für einfache Fälle — sonst if/else"],
+    ["enumerate()", "for i, v in enumerate(lst):", "Liefert Index und Wert gleichzeitig", "Index beim Iterieren brauchen", "for i, name in enumerate([\"A\",\"B\",\"C\"]):\n    print(f\"{i}: {name}\")\n# 0: A, 1: B, 2: C", "start-Parameter ändert Startwert", "Viel besser als range(len(liste))"],
+    ["zip()", "for a, b in zip(lst1, lst2):", "Kombiniert mehrere Sequenzen parallel", "Zwei Listen gleichzeitig durchlaufen", "namen = [\"A\", \"B\"]\nalter = [28, 34]\nfor n, a in zip(namen, alter):\n    print(f\"{n}: {a}\")", "Stoppt bei kürzerer Sequenz", "zip() ist lazy — list() für sofortige Auswertung"],
+  ],
+  "Funktionen": [
+    ["def", "def funktionsname(parameter):", "Definiert eine wiederverwendbare Funktion", "Code strukturieren und wiederverwenden", "def addiere(a, b):\n    return a + b\n\nergebnis = addiere(3, 4)  # 7", "Aufruf vor Definition: NameError", "Vor dem Aufruf definieren oder importieren"],
+    ["return", "return wert", "Gibt Wert aus Funktion zurück und beendet sie", "Ergebnis einer Funktion übergeben", "def quadrat(x):\n    return x ** 2\n\nprint(quadrat(5))  # 25", "Nach return wird nichts mehr ausgeführt", "Ohne return: Funktion gibt None zurück"],
+    ["*args", "def f(*args):", "Nimmt beliebig viele positionale Argumente", "Funktionen mit variabler Argumentanzahl", "def summe(*zahlen):\n    return sum(zahlen)\nprint(summe(1,2,3,4))  # 10", "args ist ein Tuple, nicht eine Liste", "Namen *args ist Konvention, nicht Pflicht"],
+    ["**kwargs", "def f(**kwargs):", "Nimmt beliebig viele Schlüsselwort-Argumente", "Flexible Konfigurationsfunktionen", "def beschreibe(**infos):\n    for k, v in infos.items():\n        print(f\"{k}: {v}\")\nbeschreibe(name=\"Anna\", alter=28)", "kwargs ist ein Dict", "Nach *args kommen immer **kwargs"],
+    ["lambda", "lambda parameter: ausdruck", "Anonyme Einzeilenfunktion", "Sortier-Keys, kurze Callbacks", "quadrat = lambda x: x**2\nprint(quadrat(5))  # 25\nliste.sort(key=lambda x: x[1])", "Nur ein Ausdruck möglich, kein Block", "Für komplexere Logik: reguläre Funktion"],
+    ["Standardparameter", "def f(a, b=10):", "Parameter mit Standardwert wenn nicht angegeben", "Optionale Parameter", "def power(basis, exp=2):\n    return basis ** exp\nprint(power(3))    # 9\nprint(power(3, 3)) # 27", "Keine Standardwerte vor Pflichtparametern", "Veränderliche Defaults ([], {}) vermeiden!"],
+    ["Rekursion", "def f(n): return f(n-1) ...", "Funktion ruft sich selbst auf", "Algorithmen mit selbstähnlicher Struktur", "def fakultaet(n):\n    if n == 0:\n        return 1\n    return n * fakultaet(n-1)\nprint(fakultaet(5))  # 120", "Ohne Abbruchbedingung: RecursionError", "Python-Limit: ca. 1000 Ebenen tief"],
+    ["sorted()", "sorted(iterable, key=None, reverse=False)", "Gibt sortierte neue Liste zurück", "Sequenzen sortieren ohne Original zu ändern", "zahlen = [3,1,4,1,5]\nneu = sorted(zahlen)\nnamen = sorted(personen, key=lambda p: p['alter'])", "Gibt immer Liste zurück", "key-Funktion bestimmt Sortierkriterium"],
+    ["map()", "map(funktion, iterable)", "Wendet Funktion auf jedes Element an", "Transformationen auf Sequenzen", "zahlen = [1, 2, 3, 4]\ndoppelt = list(map(lambda x: x*2, zahlen))\n# [2, 4, 6, 8]", "Gibt map-Objekt zurück — list() nötig", "List comprehension oft lesbarer"],
+    ["filter()", "filter(funktion, iterable)", "Filtert Elemente nach Bedingung", "Elemente nach Kriterium auswählen", "zahlen = [1,2,3,4,5,6]\ngerade = list(filter(lambda x: x%2==0, zahlen))\n# [2, 4, 6]", "Gibt filter-Objekt zurück — list() nötig", "List comprehension mit Bedingung lesbarer"],
+  ],
+  "Klassen & OOP": [
+    ["class", "class Klassenname:", "Definiert einen Bauplan für Objekte", "Eigene Datenstrukturen erstellen", "class Auto:\n    def __init__(self, marke):\n        self.marke = marke\nwagen = Auto(\"VW\")", "Klasse ohne __init__ hat keine initialen Attribute", "Klassen nach PEP8 in PascalCase"],
+    ["__init__", "def __init__(self, ...):", "Konstruktor — wird bei Objekterstellung aufgerufen", "Anfangszustand des Objekts setzen", "class Kreis:\n    def __init__(self, radius):\n        self.radius = radius\n        self.farbe = \"blau\"", "Erster Parameter ist immer self", "Nicht __init__ direkt aufrufen — new Objekt() ruft es auf"],
+    ["self", "self.attribut = wert", "Verweis auf das aktuelle Objekt", "Attribute und Methoden des Objekts ansprechen", "class Hund:\n    def __init__(self, name):\n        self.name = name\n    def bellen(self):\n        print(f\"{self.name} bellt!\")", "self immer als ersten Parameter angeben", "self ist Konvention — technisch beliebig benennbar"],
+    ["Methode", "def methode(self, ...):", "Funktion, die zu einer Klasse gehört", "Verhalten von Objekten definieren", "class Rechner:\n    def addiere(self, a, b):\n        return a + b\nr = Rechner()\nprint(r.addiere(3, 4))", "Methode hat immer self als ersten Parameter", "Über Objekt aufrufen: objekt.methode()"],
+    ["Vererbung", "class Kind(Eltern):", "Kind-Klasse erbt Attribute und Methoden der Eltern", "Code wiederverwenden und spezialisieren", "class Tier:\n    def atmen(self):\n        print(\"Ich atme\")\nclass Hund(Tier):\n    def bellen(self):\n        print(\"Wuff\")\nh = Hund()\nh.atmen()  # Geerbt!", "Mehrfachvererbung möglich aber komplex", "isinstance(obj, Klasse) prüft Klassenbeziehung"],
+    ["super()", "super().__init__(...)", "Ruft Methode der Elternklasse auf", "Eltern-Konstruktor mit eigenen Erweiterungen nutzen", "class Haustier(Tier):\n    def __init__(self, name):\n        super().__init__()\n        self.name = name", "Ohne super() wird Eltern-__init__ nicht ausgeführt", "Immer vor eigener Initialisierung aufrufen"],
+    ["__str__", "def __str__(self):", "Bestimmt Ausgabe bei print() und str()", "Lesbare Objektdarstellung", "class Person:\n    def __str__(self):\n        return f\"Person({self.name})\"", "Ohne __str__: unkryptische Adresse ausgegeben", "Für Debugging __repr__ definieren"],
+    ["@property", "@property\ndef name(self):", "Dekorator — macht Methode zu lesbarem Attribut", "Berechnete Attribute, Attributzugriff kontrollieren", "class Kreis:\n    @property\n    def flaeche(self):\n        return 3.14 * self.radius**2\nk = Kreis(5)\nprint(k.flaeche)  # 78.5", "Kein () beim Aufruf", "@name.setter für schreibbaren Property"],
+    ["Klassenattribut", "class MyClass:\n    klassenwert = 0", "Attribut, das von allen Instanzen geteilt wird", "Zähler, gemeinsame Konfiguration", "class Zaehler:\n    anzahl = 0\n    def __init__(self):\n        Zaehler.anzahl += 1", "Instanzattribut (self.x) hat Vorrang vor Klassenattribut", "Mit Klassenname.attribut ansprechen"],
+    ["@staticmethod", "@staticmethod\ndef methode(...):", "Methode ohne Zugriff auf self oder cls", "Hilfsfunktionen, die zur Klasse gehören", "class Mathe:\n    @staticmethod\n    def quadrat(x):\n        return x**2\nprint(Mathe.quadrat(5))", "Kein Zugriff auf Instanz oder Klasse", "Über Klasse oder Instanz aufrufbar"],
+  ],
+  "Module & Bibliotheken": [
+    ["import", "import modulname", "Lädt ein Modul in den aktuellen Namespace", "Standard-Bibliotheken oder eigene Module laden", "import math\nprint(math.sqrt(16))  # 4.0", "Zirkuläre Imports können Fehler verursachen", "Immer am Anfang der Datei"],
+    ["from ... import", "from modul import name", "Importiert spezifische Namen aus Modul", "Direkter Zugriff ohne Modul-Präfix", "from math import sqrt, pi\nprint(sqrt(16))  # 4.0", "Namenskollisionen möglich", "from modul import * vermeiden (unklar was importiert wird)"],
+    ["as (Alias)", "import numpy as np", "Importiert Modul unter anderem Namen", "Lange Modulnamen abkürzen", "import pandas as pd\nimport matplotlib.pyplot as plt", "Aliase sollten universell bekannt sein (np, pd, plt)", "Community-Konventionen für bekannte Bibliotheken einhalten"],
+    ["math", "import math", "Mathematische Funktionen und Konstanten", "Trigonometrie, Logarithmen, Rundung", "import math\nmath.sqrt(25)   # 5.0\nmath.pi         # 3.14159...\nmath.ceil(2.3)  # 3\nmath.floor(2.9) # 2", "math.sqrt() gibt float, nicht int", "math.isnan() für NaN-Prüfung"],
+    ["random", "import random", "Zufallszahlen und Zufallsauswahl", "Spiele, Simulationen, Tests", "import random\nrandom.randint(1, 6)  # Würfel\nrandom.choice([\"A\",\"B\",\"C\"])\nrandom.shuffle(liste)", "random ist pseudozufällig (nicht kryptografisch sicher)", "Für sichere Zufallszahlen: secrets-Modul"],
+    ["datetime", "from datetime import datetime", "Datum und Uhrzeit verarbeiten", "Zeitstempel, Datumsberechnungen", "from datetime import datetime\njetzt = datetime.now()\nprint(jetzt.strftime(\"%d.%m.%Y\"))  # 01.01.2024", "Zeitzone beachten: datetime.now() ist lokal", "timedelta für Zeitdifferenzen"],
+    ["os", "import os", "Betriebssystem-Interaktion", "Datei-/Ordnerverwaltung, Pfade", "import os\nos.getcwd()          # Aktuelles Verzeichnis\nos.listdir('.')      # Dateien auflisten\nos.path.join('a','b')  # Pfad kombinieren", "os.path.join() für plattformübergreifende Pfade", "os.environ für Umgebungsvariablen"],
+    ["sys", "import sys", "Python-Interpreter und Skript-Informationen", "Argumente, Python-Version, Exit", "import sys\nprint(sys.argv)     # Skript-Argumente\nprint(sys.version)  # Python-Version\nsys.exit(0)         # Programm beenden", "sys.exit() wirft SystemExit-Exception", "sys.argv[0] ist der Skriptname"],
+    ["json", "import json", "JSON-Daten lesen und schreiben", "APIs, Konfigurationsdateien", "import json\ndaten = {\"name\": \"Anna\"}\ntext = json.dumps(daten)   # Dict zu String\nobj = json.loads(text)     # String zu Dict", "Nur JSON-kompatible Typen serialisierbar", "json.dump()/json.load() für Dateien"],
+    ["re", "import re", "Reguläre Ausdrücke — Pattern-Matching", "Text suchen, validieren, ersetzen", "import re\nresult = re.search(r'\\d+', 'abc123')\nif result:\n    print(result.group())  # '123'", "Regex-Syntax komplex — Tester nutzen", "re.compile() für mehrfach verwendete Patterns"],
+  ],
+  "Dateiverarbeitung": [
+    ["open()", "open(pfad, modus, encoding)", "Öffnet eine Datei und gibt File-Objekt zurück", "Dateien lesen und schreiben", "f = open(\"datei.txt\", \"r\", encoding=\"utf-8\")\ninhalt = f.read()\nf.close()", "Datei immer schließen — besser with-Statement", "Modus: r (lesen), w (schreiben), a (anhängen), x (neu)"],
+    ["with open()", "with open(pfad) as f:", "Kontextmanager — schließt Datei automatisch", "Standard für Dateioperationen", "with open(\"datei.txt\", \"r\", encoding=\"utf-8\") as f:\n    inhalt = f.read()", "Datei auch bei Fehler automatisch geschlossen", "Immer with statt manuellem open/close"],
+    ["f.read()", "f.read()", "Liest gesamten Dateiinhalt als String", "Kleine Dateien einlesen", "with open(\"text.txt\") as f:\n    text = f.read()\nprint(text)", "Bei großen Dateien viel Speicher verbrauchen", "f.read(n) liest n Bytes"],
+    ["f.readlines()", "f.readlines()", "Liest alle Zeilen als Liste", "Zeilenweise Verarbeitung", "with open(\"daten.csv\") as f:\n    zeilen = f.readlines()", "Zeilenumbruch \\n am Ende jeder Zeile", "strip() zum Entfernen des Zeilenumbruchs"],
+    ["f.write()", "f.write(text)", "Schreibt String in Datei", "Ergebnisse speichern, Logs", "with open(\"ausgabe.txt\", \"w\") as f:\n    f.write(\"Erste Zeile\\n\")\n    f.write(\"Zweite Zeile\\n\")", "'w' überschreibt bestehende Datei", "'a' zum Anhängen verwenden"],
+    ["f.writelines()", "f.writelines(liste)", "Schreibt Liste von Strings in Datei", "Viele Zeilen auf einmal schreiben", "zeilen = [\"Zeile 1\\n\", \"Zeile 2\\n\"]\nwith open(\"out.txt\", \"w\") as f:\n    f.writelines(zeilen)", "Kein automatischer Zeilenumbruch!", "\\n manuell an jede Zeile anhängen"],
+    ["os.path.exists()", "os.path.exists(pfad)", "Prüft ob Pfad/Datei existiert", "Vor Dateizugriff prüfen", "import os\nif os.path.exists(\"config.txt\"):\n    with open(\"config.txt\") as f: ...", "Race condition möglich (zwischen Check und Zugriff)", "try/except oft robuster"],
+    ["CSV lesen", "csv.reader(f)", "Liest kommagetrennte Werte aus Datei", "Tabellendaten, Excel-Exports verarbeiten", "import csv\nwith open(\"daten.csv\") as f:\n    leser = csv.reader(f)\n    for zeile in leser:\n        print(zeile)", "Erste Zeile oft Kopfzeile — überspringen!", "csv.DictReader() gibt Dictionaries zurück"],
+  ],
+  "Fehlerbehandlung": [
+    ["try/except", "try:\n    ...\nexcept Fehlertyp:", "Abfangen von Laufzeitfehlern", "Robuste Programme schreiben", "try:\n    zahl = int(input(\"Zahl: \"))\nexcept ValueError:\n    print(\"Keine gültige Zahl!\")", "Zu breites except Exception fängt alles ab", "Spezifische Fehlertypen abfangen"],
+    ["except Exception as e", "except Exception as e:", "Fängt Fehler und speichert ihn als Variable", "Fehlermeldung für Debug/Logging speichern", "try:\n    ...\nexcept Exception as e:\n    print(f\"Fehler: {e}\")\n    logging.error(e)", "Exception fängt fast alles — zu breit für Produktion", "Nach Fehlerbehandlung weiterlaufen oder re-raise"],
+    ["else (try)", "try:\n    ...\nexcept ...\nelse:\n    ...", "Wird ausgeführt wenn kein Fehler auftrat", "Code trennen der Fehler von fehlerlosen Zweig", "try:\n    ergebnis = 10 / n\nexcept ZeroDivisionError:\n    print(\"Fehler\")\nelse:\n    print(f\"Ergebnis: {ergebnis}\")", "Wird oft vergessen, ist aber sauber", "Klarer als if/else im except-Zweig"],
+    ["finally", "finally:\n    ...", "Wird immer ausgeführt — egal ob Fehler oder nicht", "Ressourcen freigeben, Aufräumen", "try:\n    f = open(\"datei.txt\")\n    ...\nfinally:\n    f.close()", "Auch bei return wird finally ausgeführt", "with-Statement ist eleganter für Dateien"],
+    ["raise", "raise Fehlertyp(\"Nachricht\")", "Löst bewusst eine Exception aus", "Eingaben validieren, Verträge durchsetzen", "def quadratwurzel(n):\n    if n < 0:\n        raise ValueError(\"Keine negativen Zahlen!\")\n    return n ** 0.5", "Exception-Klasse und Nachricht angeben", "Eigene Exception-Klassen durch Vererbung möglich"],
+    ["ValueError", "raise ValueError(\"...\")", "Fehler: Wert hat falschen Inhalt", "int(\"abc\"), falscher Bereich", "try:\n    int(\"text\")\nexcept ValueError as e:\n    print(e)", "Häufigster Fehler bei Typkonvertierungen", "input() gibt immer String zurück — int() kann ValueError"],
+    ["TypeError", "raise TypeError(\"...\")", "Fehler: Operation auf falschen Typ", "String + int, len(5)", "try:\n    print(\"Alter: \" + 28)\nexcept TypeError:\n    print(\"Typen inkompatibel\")", "String-Konkatenation mit Nicht-String", "Oft durch fehlende Typkonvertierung"],
+    ["KeyError", "raise KeyError(\"key\")", "Fehler: Schlüssel nicht im Dictionary", "Dictionary-Zugriff auf fehlenden Key", "person = {\"name\": \"Anna\"}\ntry:\n    print(person[\"alter\"])\nexcept KeyError:\n    print(\"Key nicht vorhanden\")", "Verwende dict.get() statt direktem Zugriff", "Mit get(key, default) vermeiden"],
+    ["IndexError", "raise IndexError(\"...\")", "Fehler: Index außerhalb der Sequenz", "lst[10] bei 5-elementiger Liste", "lst = [1, 2, 3]\ntry:\n    print(lst[10])\nexcept IndexError:\n    print(\"Index zu groß\")", "Häufig in Schleifen mit falschem Index", "len(liste) vor Zugriff prüfen"],
+    ["assert", "assert bedingung, \"Nachricht\"", "Prüft Bedingung und wirft AssertionError", "Debugging, interne Verträge", "def teilung(a, b):\n    assert b != 0, \"Divisor darf nicht 0 sein!\"\n    return a / b", "assert kann mit -O Flag deaktiviert werden", "Nur für Entwicklungszeit — nicht für Eingabevalidierung"],
+  ],
+};
+
+// ─── BUILD REFERENCE SECTIONS ──────────────────────────────────────────────────
+
+function buildRefSection(title, categories) {
+  const out = [
+    pageBreak(),
+    h1(title),
+  ];
+
+  for (const [cat, entries] of Object.entries(categories)) {
+    out.push(sectionHeader(cat));
+    for (const entry of entries) {
+      const rows = refEntry(...entry);
+      out.push(...rows);
+    }
+  }
+  return out;
+}
+
+const module3_html = buildRefSection("Modul 3A: HTML-Referenz — Die 100+ wichtigsten Elemente", htmlCategories);
+const module3_python = buildRefSection("Modul 3B: Python-Referenz — Die 100+ wichtigsten Elemente", pythonCategories);
+
+// ─── TITLE PAGE & TOC ─────────────────────────────────────────────────────────
+const titlePage = [
+  new Paragraph({
+    children: [new TextRun({ text: "", font: "Arial" })],
+    spacing: { after: 2400 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "CodeCraft", font: "Arial", size: 72, bold: true, color: C.navy })],
+    spacing: { after: 200 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "Programmieren lernen — HTML & Python", font: "Arial", size: 40, color: C.accent })],
+    spacing: { after: 160 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "Das vollständige Lernprogramm für absolute Anfänger", font: "Arial", size: 28, color: C.mid, italics: true })],
+    spacing: { after: 800 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    border: { top: { style: BorderStyle.SINGLE, size: 2, color: C.cyan } },
+    children: [new TextRun({ text: "", font: "Arial" })],
+    spacing: { before: 400, after: 200 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "Modul 1 — Technische Grundlagen", font: "Arial", size: 24, color: C.mid })],
+    spacing: { after: 120 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "Modul 2 — Funktionsweise von Programmiersprachen", font: "Arial", size: 24, color: C.mid })],
+    spacing: { after: 120 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "Modul 3 — Praktische Referenz HTML & Python (400+ Einträge)", font: "Arial", size: 24, color: C.mid })],
+    spacing: { after: 1200 },
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "© 2026 CodeCraft  ·  Alle Rechte vorbehalten", font: "Arial", size: 20, color: C.mid })],
+    spacing: { after: 0 },
+  }),
+  pageBreak(),
+  new TableOfContents("Inhaltsverzeichnis", {
+    hyperlink: true,
+    headingStyleRange: "1-3",
+  }),
+];
+
+// ─── ASSEMBLE DOCUMENT ────────────────────────────────────────────────────────
+const allChildren = [
+  ...titlePage,
+  ...module1,
+  ...module2,
+  ...module3_html,
+  ...module3_python,
+];
+
+const doc = new Document({
+  numbering: {
+    config: [
+      {
+        reference: "bullets",
+        levels: [{
+          level: 0, format: LevelFormat.BULLET, text: "\u2022",
+          alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }]
+      },
+      {
+        reference: "numbers",
+        levels: [{
+          level: 0, format: LevelFormat.DECIMAL, text: "%1.",
+          alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }]
+      },
+    ]
+  },
+  styles: {
+    default: {
+      document: { run: { font: "Arial", size: 22 } }
+    },
+    paragraphStyles: [
+      {
+        id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 36, bold: true, font: "Arial", color: C.navy },
+        paragraph: { spacing: { before: 480, after: 240 }, outlineLevel: 0 }
+      },
+      {
+        id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 28, bold: true, font: "Arial", color: C.accent },
+        paragraph: { spacing: { before: 360, after: 180 }, outlineLevel: 1 }
+      },
+      {
+        id: "Heading3", name: "Heading 3", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 24, bold: true, font: "Arial", color: C.steel },
+        paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 2 }
+      },
+    ]
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 },
+        margin: { top: 1440, right: 1296, bottom: 1440, left: 1296 }
+      }
+    },
+    headers: {
+      default: new Header({
+        children: [new Paragraph({
+          children: [
+            new TextRun({ text: "CodeCraft — HTML & Python Lernprogramm", font: "Arial", size: 18, color: C.mid }),
+          ],
+          border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: C.border } },
+          spacing: { after: 0 }
+        })]
+      })
+    },
+    footers: {
+      default: new Footer({
+        children: [new Paragraph({
+          children: [
+            new TextRun({ text: "Seite ", font: "Arial", size: 18, color: C.mid }),
+            new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 18, color: C.mid }),
+            new TextRun({ text: " von ", font: "Arial", size: 18, color: C.mid }),
+            new TextRun({ children: [PageNumber.TOTAL_PAGES], font: "Arial", size: 18, color: C.mid }),
+          ],
+          alignment: AlignmentType.CENTER,
+          border: { top: { style: BorderStyle.SINGLE, size: 1, color: C.border } },
+          spacing: { before: 0 }
+        })]
+      })
+    },
+    children: allChildren,
+  }]
+});
+
+Packer.toBuffer(doc).then(buf => {
+  fs.writeFileSync("/mnt/user-data/outputs/CodeCraft_Lernprogramm.docx", buf);
+  console.log("✅ CodeCraft_Lernprogramm.docx erstellt");
+}).catch(err => {
+  console.error("❌ Fehler:", err.message);
+  process.exit(1);
+});
