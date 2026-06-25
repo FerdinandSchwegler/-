@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeCraft — HTML & Python Kurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════
+   RESET & TOKENS
+════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1628; --deep:#0E1F38; --panel:#122035; --panel2:#172840;
+  --mint:#00C896; --mint-dim:#009E76; --lava:#FF5722; --gold:#F59E0B;
+  --ice:#E8EDF5; --steel:#7A90B0; --muted:#3A5070; --border:#1E3352;
+  --code-bg:#060F1C; --green:#C3E88D; --purple:#C792EA; --blue:#82AAFF;
+  --orange:#F78C6C; --comment:#4A6882;
+  --sidebar:260px; --r:10px; --r-lg:16px;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--ice);line-height:1.7;display:flex;min-height:100vh;overflow-x:hidden}
+
+/* ════════════════════════════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════════════════════════════ */
+#sidebar{
+  width:var(--sidebar);flex-shrink:0;background:var(--deep);
+  border-right:1px solid var(--border);height:100vh;
+  position:fixed;top:0;left:0;overflow-y:auto;z-index:50;
+  display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:var(--muted) transparent;
+}
+#sidebar::-webkit-scrollbar{width:4px}
+#sidebar::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+.sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo-txt{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--ice)}
+.sb-logo-txt span{color:var(--mint)}
+.sb-logo-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.sb-progress-wrap{padding:14px 20px;border-bottom:1px solid var(--border)}
+.sb-progress-label{font-size:11px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
+.sb-bar{height:3px;background:var(--panel2);border-radius:2px;overflow:hidden}
+.sb-bar-fill{height:100%;background:var(--mint);border-radius:2px;transition:width .4s ease;width:0%}
+.sb-modules{padding:12px 0;flex:1}
+.sb-mod-label{padding:10px 20px 4px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Space Grotesk',sans-serif}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:13px;color:var(--steel);transition:all .15s;border-left:2px solid transparent;line-height:1.35}
+.sb-item:hover{color:var(--ice);background:rgba(255,255,255,0.03)}
+.sb-item.active{color:var(--mint);border-left-color:var(--mint);background:rgba(0,200,150,0.06)}
+.sb-item.done{color:var(--mint-dim)}
+.sb-item.done .sb-check{opacity:1}
+.sb-check{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--muted);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;opacity:0;color:var(--mint);transition:all .2s}
+.sb-item.done .sb-check{background:rgba(0,200,150,0.15);border-color:var(--mint);opacity:1}
+.sb-item.active .sb-check{border-color:var(--mint)}
+.sb-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);min-width:20px}
+
+/* ════════════════════════════════════════════════════════════
+   MAIN CONTENT
+════════════════════════════════════════════════════════════ */
+#main{margin-left:var(--sidebar);flex:1;min-width:0}
+#topbar{
+  position:sticky;top:0;z-index:40;background:rgba(11,22,40,.95);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  padding:12px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px
+}
+.topbar-breadcrumb{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.topbar-breadcrumb span{color:var(--ice)}
+.topbar-actions{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.btn-nav{background:var(--panel2);border:1px solid var(--border);color:var(--steel);padding:7px 16px;border-radius:7px;font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-nav:hover{border-color:var(--mint);color:var(--ice)}
+.btn-nav:disabled{opacity:.35;cursor:default}
+.btn-done{background:var(--mint);color:#0a1a0f;padding:7px 18px;border-radius:7px;font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.btn-done:hover{background:var(--mint-dim)}
+#hamburger{display:none;background:none;border:1px solid var(--border);color:var(--steel);padding:7px 10px;border-radius:7px;cursor:pointer;font-size:17px}
+
+/* ════════════════════════════════════════════════════════════
+   LESSON CONTENT
+════════════════════════════════════════════════════════════ */
+.lesson{display:none;padding:48px 40px 80px;max-width:820px}
+.lesson.active{display:block}
+.lesson-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mint);margin-bottom:12px}
+.lesson-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,4vw,38px);font-weight:700;color:var(--ice);letter-spacing:-.03em;line-height:1.15;margin-bottom:16px}
+.lesson-intro{font-size:16px;color:var(--steel);line-height:1.75;margin-bottom:40px;max-width:640px}
+.divider{border:none;border-top:1px solid var(--border);margin:40px 0}
+h2.ch{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--ice);margin:40px 0 14px;letter-spacing:-.02em}
+h3.ch{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--ice);margin:28px 0 10px}
+p.tx{font-size:15px;color:var(--steel);line-height:1.75;margin-bottom:14px}
+strong.hl{color:var(--ice);font-weight:600}
+em.it{color:var(--gold);font-style:italic}
+ul.blist,ol.nlist{margin:12px 0 18px 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.blist li,ol.nlist li{padding-left:26px;font-size:15px;color:var(--steel);position:relative;line-height:1.65}
+ul.blist li::before{content:'▸';position:absolute;left:0;color:var(--mint);font-size:11px;top:4px}
+ol.nlist{counter-reset:n}
+ol.nlist li{counter-increment:n}
+ol.nlist li::before{content:counter(n)'.';position:absolute;left:0;color:var(--mint);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:12px;top:3px}
+
+/* CODE BLOCKS */
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:var(--r-lg);margin:20px 0;overflow:hidden}
+.code-header{background:#0D1B2A;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.code-lang{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--mint);text-transform:uppercase;letter-spacing:1px}
+.code-copy{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:5px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.code-copy:hover{border-color:var(--mint);color:var(--mint)}
+.code-copy.copied{color:var(--mint);border-color:var(--mint)}
+pre{padding:20px 22px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.85;color:#CDD6E0}
+pre::-webkit-scrollbar{height:4px}
+pre::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+.kw{color:var(--purple)}.fn{color:var(--blue)}.str{color:var(--green)}
+.num{color:var(--orange)}.cm{color:var(--comment);font-style:italic}
+.tag{color:#F07178}.attr{color:var(--gold)}.val{color:var(--green)}
+.mt{color:var(--mint)}.op{color:#89DDFF}
+
+/* CALLOUT BOXES */
+.box{border-radius:var(--r);padding:18px 22px;margin:20px 0;display:flex;gap:14px;align-items:flex-start}
+.box-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.box-body{flex:1}
+.box-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.box-text{font-size:14px;line-height:1.65}
+.box.info{background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2)}
+.box.info .box-title{color:var(--mint)}
+.box.info .box-text{color:var(--steel)}
+.box.warn{background:rgba(255,87,34,.07);border:1px solid rgba(255,87,34,.2)}
+.box.warn .box-title{color:#FF7B55}
+.box.warn .box-text{color:var(--steel)}
+.box.tip{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2)}
+.box.tip .box-title{color:var(--gold)}
+.box.tip .box-text{color:var(--steel)}
+
+/* INLINE CODE */
+code.ic{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:#0D1B2A;color:var(--mint);padding:2px 7px;border-radius:5px;border:1px solid var(--border)}
+
+/* REF TABLE */
+.ref-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+.ref-table th{background:var(--panel2);padding:10px 14px;text-align:left;color:var(--steel);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.ref-table td{padding:10px 14px;border-bottom:1px solid rgba(30,51,82,.6);color:var(--steel);vertical-align:top;line-height:1.5}
+.ref-table td:first-child{font-family:'JetBrains Mono',monospace;color:var(--mint);font-size:12px;white-space:nowrap}
+.ref-table tr:hover td{background:rgba(26,40,64,.5)}
+.ref-table td.feat{color:var(--ice);font-weight:500;font-family:'Space Grotesk',sans-serif}
+
+/* QUIZ */
+.quiz{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;margin:32px 0}
+.quiz-q{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--ice);margin-bottom:18px}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{background:var(--panel2);border:1.5px solid var(--border);border-radius:8px;padding:12px 18px;cursor:pointer;font-size:14px;color:var(--steel);transition:all .2s;text-align:left;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:10px}
+.quiz-opt:hover{border-color:var(--steel);color:var(--ice)}
+.quiz-opt.correct{border-color:var(--mint);background:rgba(0,200,150,.1);color:var(--mint)}
+.quiz-opt.wrong{border-color:#FF5722;background:rgba(255,87,34,.1);color:#FF7B55}
+.quiz-opt-marker{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700}
+.quiz-feedback{margin-top:14px;font-size:14px;color:var(--steel);display:none;padding:12px 16px;border-radius:8px;background:var(--panel2)}
+.quiz-next{margin-top:14px;background:var(--mint);color:#0a1a0f;padding:9px 20px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;border:none;cursor:pointer;display:none}
+
+/* PROGRESS STEPS */
+.steps{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.step{display:flex;gap:18px;padding-bottom:28px;position:relative}
+.step:not(:last-child)::before{content:'';position:absolute;left:16px;top:34px;bottom:0;width:1px;background:var(--border)}
+.step-num{width:34px;height:34px;border-radius:50%;background:rgba(0,200,150,.12);border:1.5px solid var(--mint);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--mint);flex-shrink:0}
+.step-body h4{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--ice);margin-bottom:6px}
+.step-body p{font-size:14px;color:var(--steel);line-height:1.65}
+
+/* WELCOME / OVERVIEW cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;cursor:pointer;transition:all .25s}
+.card:hover{border-color:rgba(0,200,150,.35);transform:translateY(-2px)}
+.card-icon{font-size:28px;margin-bottom:12px}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--ice);margin-bottom:6px}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.5}
+.card-badge{display:inline-block;margin-top:10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--mint);background:rgba(0,200,150,.1);padding:2px 8px;border-radius:4px}
+
+/* REF ENTRY (Modul 3) */
+.ref-entry{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);margin:16px 0;overflow:hidden}
+.ref-entry-head{background:var(--panel2);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ref-entry-name{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--mint)}
+.ref-entry-badge{font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;background:rgba(0,200,150,.15);color:var(--mint);padding:3px 9px;border-radius:5px;letter-spacing:.5px;text-transform:uppercase}
+.ref-entry-body{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ref-field{font-size:13px}
+.ref-field-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;font-family:'Space Grotesk',sans-serif}
+.ref-field-val{color:var(--steel);line-height:1.55}
+.ref-field.full{grid-column:1/-1}
+.ref-field code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--code-bg);color:var(--green);padding:1px 6px;border-radius:4px}
+
+/* CHAPTER NAV (bottom) */
+.chapter-nav{display:flex;gap:12px;margin-top:60px;padding-top:32px;border-top:1px solid var(--border);flex-wrap:wrap}
+.cnav-btn{flex:1;min-width:180px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 20px;cursor:pointer;text-align:left;transition:all .2s}
+.cnav-btn:hover{border-color:var(--mint)}
+.cnav-label{font-size:11px;color:var(--muted);margin-bottom:4px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.cnav-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--ice)}
+.cnav-btn.next{text-align:right}
+
+/* KEYBOARD TABLE */
+.key{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-bottom:2px solid var(--muted);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ice)}
+
+/* RESPONSIVE */
+@media(max-width:820px){
+  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .lesson{padding:28px 20px 60px}
+  #hamburger{display:block}
+  #topbar{padding:10px 20px}
+  .ref-entry-body{grid-template-columns:1fr}
+  .ref-field.full{grid-column:auto}
+}
+@media(max-width:500px){
+  .lesson-title{font-size:24px}
+  .card-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════════════════════════════════════════ -->
+<nav id="sidebar" aria-label="Kurs-Navigation">
+  <div class="sb-logo">
+    <div class="sb-logo-txt">code<span>craft</span></div>
+    <div class="sb-logo-sub">HTML &amp; Python für Anfänger</div>
+  </div>
+  <div class="sb-progress-wrap">
+    <div class="sb-progress-label"><span>Fortschritt</span><span id="prog-pct">0%</span></div>
+    <div class="sb-bar"><div class="sb-bar-fill" id="prog-bar"></div></div>
+  </div>
+  <div class="sb-modules" id="sb-nav">
+    <!-- Filled by JS -->
+  </div>
+</nav>
+
+<!-- ═══════ MAIN ══════════════════════════════════════════════ -->
+<div id="main">
+  <div id="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="hamburger" onclick="toggleSidebar()" aria-label="Menü">☰</button>
+      <div class="topbar-breadcrumb">
+        <span id="bc-mod">Start</span>
+        <span style="color:var(--muted)">›</span>
+        <span id="bc-lesson">Willkommen</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-nav" id="btn-prev" onclick="navLesson(-1)" disabled>← Zurück</button>
+      <button class="btn-done" id="btn-done" onclick="markDone()">✓ Erledigt</button>
+      <button class="btn-nav" id="btn-next" onclick="navLesson(1)">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- Lessons container -->
+  <div id="lessons-wrap">
+  <!-- ALL LESSONS BELOW -->
+
+<!-- ════════════════════════════════════════════════════════
+  L0: WELCOME
+════════════════════════════════════════════════════════ -->
+<article class="lesson active" data-id="welcome" data-mod="Start" data-title="Willkommen">
+  <div class="lesson-eyebrow">Willkommen</div>
+  <h1 class="lesson-title">Dein Weg zum Programmieren startet hier.</h1>
+  <p class="lesson-intro">CodeCraft ist ein vollständiges Lernprogramm für absolute Anfänger. Keine Vorkenntnisse nötig. Schritt für Schritt. Praxis von der ersten Minute.</p>
+
+  <div class="card-grid">
+    <div class="card" onclick="goLesson('m1-was')">
+      <div class="card-icon">🏗</div>
+      <div class="card-title">Modul 1</div>
+      <div class="card-desc">Technische Grundlagen &amp; Programmierumgebung</div>
+      <div class="card-badge">~5.000 Wörter</div>
+    </div>
+    <div class="card" onclick="goLesson('m2-aufbau')">
+      <div class="card-icon">🧠</div>
+      <div class="card-title">Modul 2</div>
+      <div class="card-desc">Funktionsweise von Programmiersprachen</div>
+      <div class="card-badge">~5.000 Wörter</div>
+    </div>
+    <div class="card" onclick="goLesson('m3-html-intro')">
+      <div class="card-icon">📖</div>
+      <div class="card-title">Modul 3</div>
+      <div class="card-desc">Praktische Referenz HTML &amp; Python</div>
+      <div class="card-badge">400+ Einträge</div>
+    </div>
+  </div>
+
+  <h2 class="ch">So funktioniert dieser Kurs</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Klicke dich durch die Lektionen</h4><p>Nutze die linke Seitenleiste oder die Pfeile oben, um durch die Inhalte zu navigieren.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Lese, verstehe, probiere</h4><p>Jedes Kapitel erklärt ein Konzept und zeigt es sofort in echtem Code. Kopiere die Beispiele und führe sie selbst aus.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Klicke „Erledigt" wenn du fertig bist</h4><p>Dein Fortschritt wird gespeichert. Der grüne Haken im Menü zeigt, was du schon geschafft hast.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Nutze Modul 3 als Nachschlagewerk</h4><p>Die Referenz mit 400 Einträgen ist dein dauerhafter Begleiter — auch weit nach dem Kurs.</p></div></div>
+  </div>
+
+  <div class="box info"><div class="box-icon">💡</div><div class="box-body"><div class="box-title">Tipp</div><div class="box-text">Starte mit Modul 1, Lektion 1. Alle Inhalte bauen aufeinander auf. Auch wenn du ungeduldig bist — die Grundlagen aus Modul 1 machen Modul 2 viel einfacher.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Als nächstes →</div><div class="cnav-title">Modul 1: Was ist Programmieren?</div></button>
+  </div>
+</article>
+
+<!-- ════════════════════════════════════════════════════════
+  MODUL 1
+════════════════════════════════════════════════════════ -->
+<article class="lesson" data-id="m1-was" data-mod="Modul 1" data-title="Was ist Programmieren?">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 1</div>
+  <h1 class="lesson-title">Was ist Programmieren?</h1>
+  <p class="lesson-intro">Programmieren bedeutet, einem Computer in einer Sprache, die er versteht, präzise Anweisungen zu geben. In dieser Lektion lernst du, was dahinter steckt — ohne Fachchinesisch.</p>
+
+  <h2 class="ch">Der Computer: mächtig, aber ohne Eigeninitiative</h2>
+  <p class="tx">Ein Computer kann nichts, was man ihm nicht explizit beibringt. Er ist schnell, präzise und unermüdlich — aber von Natur aus vollkommen passiv. Damit er etwas tut, braucht er <strong class="hl">Anweisungen in einer exakten, formalen Sprache</strong>.</p>
+  <p class="tx">Diese Sprache nennen wir Programmiersprache. Sie ist der Vertrag zwischen deinem Denken und der Ausführung des Computers.</p>
+
+  <div class="box info"><div class="box-icon">🎯</div><div class="box-body"><div class="box-title">Analogie</div><div class="box-text">Programmieren ist wie Kochen nach Rezept. Das Rezept (dein Code) beschreibt jeden Schritt exakt. Der Koch (der Computer) führt ihn buchstabengetreu aus. Fehlt ein Schritt oder ist er falsch — gelingt das Gericht nicht.</div></div></div>
+
+  <h2 class="ch">Wie Programmierung funktioniert</h2>
+  <p class="tx">Du schreibst lesbaren Text — Code — in einer definierten Syntax. Ein Programm namens <strong class="hl">Interpreter oder Compiler</strong> übersetzt diesen Text in Befehle, die der Prozessor versteht.</p>
+  <ul class="blist">
+    <li><strong class="hl">Python</strong> ist eine interpretierte Sprache: Der Interpreter liest deinen Code Zeile für Zeile und führt ihn sofort aus.</li>
+    <li><strong class="hl">HTML</strong> ist keine klassische Programmiersprache, sondern eine Auszeichnungssprache (Markup). Der Browser interpretiert sie und stellt Webseiten dar.</li>
+  </ul>
+
+  <h2 class="ch">Dein erstes Gedankenexperiment</h2>
+  <p class="tx">Stell dir vor, du musst einem Roboter erklären, wie er eine Tasse Kaffee macht. Du müsstest jeden Schritt präzise beschreiben:</p>
+  <ol class="nlist">
+    <li>Gehe zur Kaffeemaschine.</li>
+    <li>Öffne den Deckel des Wassertanks.</li>
+    <li>Fülle genau 300 ml Wasser ein.</li>
+    <li>Schließe den Deckel.</li>
+    <li>Lege eine Kapsel ein.</li>
+    <li>Stelle eine Tasse unter den Auslass.</li>
+    <li>Drücke den Einschaltknopf.</li>
+    <li>Warte, bis das Lämpchen erlischt.</li>
+  </ol>
+  <p class="tx">Genau so ist Programmieren. <strong class="hl">Kein Schritt darf fehlen, kein Schritt darf vage sein.</strong> Diese Präzision ist der wichtigste Unterschied zwischen menschlicher Kommunikation und Programmierung.</p>
+
+  <h2 class="ch">Was du mit Programmieren tun kannst</h2>
+  <p class="tx">Nach diesem Kurs kannst du:</p>
+  <ul class="blist">
+    <li>Eigene Webseiten mit HTML erstellen und im Browser anzeigen</li>
+    <li>Python-Programme schreiben, die Berechnungen durchführen</li>
+    <li>Texte verarbeiten, Dateien lesen und schreiben</li>
+    <li>Einfache Aufgaben automatisieren (z.B. Datei umbenennen)</li>
+    <li>Das Fundament legen für fortgeschrittene Themen wie Web-Backends, Datenanalyse oder KI</li>
+  </ul>
+
+  <div class="box tip"><div class="box-icon">✨</div><div class="box-body"><div class="box-title">Motivation</div><div class="box-text">Jeder, der heute professionell programmiert, hat genauso wie du angefangen — mit Hallo, Welt. Der einzige Unterschied ist: sie haben angefangen. Du tust es jetzt auch.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Willkommen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Hardware-Anforderungen</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-hardware" data-mod="Modul 1" data-title="Hardware-Anforderungen">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 2</div>
+  <h1 class="lesson-title">Welche Hardware brauchst du?</h1>
+  <p class="lesson-intro">Die gute Nachricht zuerst: Für das Programmieren mit HTML und Python brauchst du keinen leistungsstarken Rechner. Nahezu jeder moderne Computer reicht aus.</p>
+
+  <h2 class="ch">Mindestanforderungen</h2>
+  <table class="ref-table">
+    <thead><tr><th>Komponente</th><th>Minimum</th><th>Empfohlen</th></tr></thead>
+    <tbody>
+      <tr><td>Prozessor</td><td>Intel Core i3 / AMD Ryzen 3 (ab 2015)</td><td>Intel Core i5 / AMD Ryzen 5 oder neuer</td></tr>
+      <tr><td>Arbeitsspeicher (RAM)</td><td>4 GB</td><td>8 GB oder mehr</td></tr>
+      <tr><td>Festplattenspeicher</td><td>10 GB frei</td><td>50 GB+ SSD</td></tr>
+      <tr><td>Betriebssystem</td><td>Windows 10 / macOS 10.15</td><td>Windows 11 / macOS 13+</td></tr>
+      <tr><td>Internetverbindung</td><td>Für Downloads nötig</td><td>Stabile Breitbandverbindung</td></tr>
+      <tr><td>Bildschirm</td><td>13" HD (1366×768)</td><td>15"+ Full HD (1920×1080)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box info"><div class="box-icon">✅</div><div class="box-body"><div class="box-title">Das brauchst du NICHT</div><div class="box-text">Keine dedizierte Grafikkarte, keine teuren Peripheriegeräte, keine kostenpflichtige Software. Alles in diesem Kurs ist kostenlos oder auf deinem System bereits vorhanden.</div></div></div>
+
+  <h2 class="ch">Tastatur: Der wichtigste Eingangskanal</h2>
+  <p class="tx">Beim Programmieren arbeitest du fast ausschließlich mit der Tastatur. Eine angenehme Tastatur ist daher wichtiger als ein schneller Prozessor. Achte besonders auf:</p>
+  <ul class="blist">
+    <li>Gut erreichbare Sonderzeichen: <code class="ic">{ } [ ] ( ) / \ = ! @ # $ % ^ & * &lt; &gt;</code> — diese verwendest du sehr häufig</li>
+    <li>Deutsche Tastatur-Layout: Umlaute sind integriert, manche Sonderzeichen anders als US-Layout</li>
+    <li>Touch Typing (Zehnfingersystem) lohnt sich langfristig — aber kein Muss für den Start</li>
+  </ul>
+
+  <h2 class="ch">Zweiter Bildschirm: Großer Produktivitätsvorteil</h2>
+  <p class="tx">Wenn möglich: Ein zweiter Monitor ist beim Programmieren sehr wertvoll. Auf einem Bildschirm läuft der Code-Editor, auf dem anderen der Browser oder das Terminal. Kein Pflicht, aber eine der effektivsten Investitionen.</p>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Was ist Programmieren?</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Einrichtung unter Windows</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-windows" data-mod="Modul 1" data-title="Einrichtung unter Windows">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 3</div>
+  <h1 class="lesson-title">Programmierumgebung unter Windows einrichten</h1>
+  <p class="lesson-intro">Schritt für Schritt — von Null zur laufenden Entwicklungsumgebung auf Windows 10 oder 11.</p>
+
+  <h2 class="ch">Was wir installieren</h2>
+  <ul class="blist">
+    <li><strong class="hl">Python</strong> — die Programmiersprache (kostenlos, offizieller Download)</li>
+    <li><strong class="hl">Visual Studio Code</strong> — professioneller Code-Editor (kostenlos, von Microsoft)</li>
+    <li><strong class="hl">Python-Extension für VS Code</strong> — Syntaxhervorhebung, Autovervollständigung</li>
+  </ul>
+
+  <h2 class="ch">Schritt 1: Python installieren</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Offizielle Webseite aufrufen</h4><p>Öffne <strong class="hl">https://www.python.org/downloads/</strong> in deinem Browser. Der große gelbe Button zeigt immer die aktuelle stabile Version.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Installer herunterladen und öffnen</h4><p>Lade die <code class="ic">.exe</code>-Datei herunter und öffne sie per Doppelklick.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>⚠️ WICHTIG: „Add Python to PATH" aktivieren</h4><p>Ganz unten im ersten Fenster des Installers gibt es eine Checkbox: <strong class="hl">„Add Python 3.x to PATH"</strong>. Diese <em class="it">muss</em> aktiviert sein. Ohne sie kann Windows Python nicht finden.</p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>„Install Now" klicken und warten</h4><p>Die Installation dauert 1–3 Minuten. Anschließend auf „Close" klicken.</p></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Installation prüfen</h4><p>Drücke <span class="key">Windows</span> + <span class="key">R</span>, tippe <code class="ic">cmd</code>, drücke <span class="key">Enter</span>. Im schwarzen Fenster eingeben:</p></div></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">cmd</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>python --version</pre>
+  </div>
+  <p class="tx">Erwartete Ausgabe: <code class="ic">Python 3.12.x</code> (oder ähnlich). Siehst du das — perfekt. Erscheint eine Fehlermeldung, deinstalliere Python und installiere es erneut — diesmal mit gesetztem PATH-Häkchen.</p>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Häufigster Anfängerfehler</div><div class="box-text">Das PATH-Häkchen vergessen. Danach kann Windows Python nicht finden und du siehst <code>'python' is not recognized as an internal or external command</code>. Lösung: Deinstallieren (Einstellungen → Apps → Python) und neu installieren.</div></div></div>
+
+  <h2 class="ch">Schritt 2: Visual Studio Code installieren</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>VS Code herunterladen</h4><p>Gehe auf <strong class="hl">https://code.visualstudio.com/</strong> und klicke auf „Download for Windows".</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Installer ausführen</h4><p>Öffne die <code class="ic">.exe</code>-Datei. Im Installer empfiehlt sich: „Zu PATH hinzufügen" und „Als Code öffnen" für Explorer-Kontextmenü aktivieren.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>VS Code starten</h4><p>Nach der Installation findest du VS Code im Startmenü oder auf dem Desktop.</p></div></div>
+  </div>
+
+  <h2 class="ch">Schritt 3: Python-Extension installieren</h2>
+  <ol class="nlist">
+    <li>Öffne VS Code</li>
+    <li>Klicke auf das Puzzle-Icon links (oder drücke <span class="key">Strg</span>+<span class="key">Shift</span>+<span class="key">X</span>)</li>
+    <li>Suche nach <strong class="hl">Python</strong></li>
+    <li>Installiere die Extension <strong class="hl">Python</strong> von Microsoft (erste Ergebnis, mit dem blauen Verifizierungs-Badge)</li>
+    <li>Drücke <span class="key">Strg</span>+<span class="key">Shift</span>+<span class="key">P</span> → tippe <code class="ic">Python: Select Interpreter</code> → wähle deine installierte Python-Version</li>
+  </ol>
+
+  <div class="box info"><div class="box-icon">✅</div><div class="box-body"><div class="box-title">Deine Umgebung ist bereit</div><div class="box-text">Du hast Python und VS Code installiert. Im nächsten Schritt schreiben wir das erste Programm.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Hardware-Anforderungen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Einrichtung unter macOS</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-macos" data-mod="Modul 1" data-title="Einrichtung unter macOS">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 4</div>
+  <h1 class="lesson-title">Programmierumgebung unter macOS einrichten</h1>
+  <p class="lesson-intro">macOS bringt einen integrierten Unix-Unterbau mit — das macht einige Schritte einfacher als unter Windows. Hier ist die vollständige Anleitung.</p>
+
+  <h2 class="ch">Terminal öffnen</h2>
+  <p class="tx">Das Terminal ist dein Befehlszentrum. So öffnest du es:</p>
+  <ul class="blist">
+    <li>Finder → Programme → Dienstprogramme → Terminal</li>
+    <li>Oder: <span class="key">Cmd</span>+<span class="key">Leertaste</span> → <code class="ic">Terminal</code> eintippen → Enter</li>
+  </ul>
+
+  <h2 class="ch">Schritt 1: Homebrew installieren</h2>
+  <p class="tx">Homebrew ist ein Paketmanager für macOS — der einfachste Weg, Entwicklungstools zu installieren. Führe im Terminal aus:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">terminal</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</pre>
+  </div>
+  <p class="tx">Das Skript fragt nach deinem Passwort (ist normal und sicher) und lädt alle nötigen Abhängigkeiten. Die Installation dauert 5–15 Minuten.</p>
+
+  <h2 class="ch">Schritt 2: Python über Homebrew installieren</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">terminal</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>brew install python3</pre>
+  </div>
+  <p class="tx">Prüfen ob es funktioniert hat:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">terminal</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>python3 --version</pre>
+  </div>
+  <p class="tx">Ausgabe: <code class="ic">Python 3.12.x</code></p>
+
+  <div class="box warn"><div class="box-icon">🍎</div><div class="box-body"><div class="box-title">macOS vs. Windows: Wichtiger Unterschied</div><div class="box-text">Unter macOS heißt der Befehl <code class="ic">python3</code> statt <code class="ic">python</code>. Das ist normal und hat technische Gründe. Dieser Kurs zeigt immer beide Varianten.</div></div></div>
+
+  <h2 class="ch">Schritt 3: VS Code auf macOS</h2>
+  <ol class="nlist">
+    <li>Gehe auf <strong class="hl">https://code.visualstudio.com/</strong> und lade die macOS-Version (<code class="ic">.dmg</code>) herunter</li>
+    <li>Öffne die <code class="ic">.dmg</code>-Datei und ziehe VS Code in den Programme-Ordner</li>
+    <li>Starte VS Code aus dem Programme-Ordner</li>
+    <li>Installiere die Python-Extension (wie unter Windows: Puzzle-Icon → Python suchen → installieren)</li>
+    <li>Drücke <span class="key">Cmd</span>+<span class="key">Shift</span>+<span class="key">P</span> → <code class="ic">Python: Select Interpreter</code> → Python 3 auswählen</li>
+  </ol>
+
+  <div class="box tip"><div class="box-icon">💡</div><div class="box-body"><div class="box-title">VS Code im Terminal starten</div><div class="box-text">Drücke in VS Code <span class="key">Cmd</span>+<span class="key">Shift</span>+<span class="key">P</span> → <code class="ic">Shell Command: Install 'code' command in PATH</code>. Danach kannst du VS Code direkt aus dem Terminal mit <code class="ic">code .</code> öffnen.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Einrichtung unter Windows</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Erstes Programm schreiben</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-erstes" data-mod="Modul 1" data-title="Erstes Programm schreiben">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 5</div>
+  <h1 class="lesson-title">Dein erstes Programm</h1>
+  <p class="lesson-intro">Jetzt wird's ernst. Du schreibst, speicherst und startest dein erstes Python-Programm und deine erste HTML-Seite.</p>
+
+  <h2 class="ch">Teil 1: Python — Hallo, Welt!</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Neuen Ordner erstellen</h4><p>Erstelle auf deinem Desktop oder in deinen Dokumenten einen Ordner namens <code class="ic">codecraft</code>. Hier werden alle deine Übungsdateien liegen.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Ordner in VS Code öffnen</h4><p>VS Code → Datei → Ordner öffnen → deinen <code class="ic">codecraft</code>-Ordner auswählen.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Neue Python-Datei erstellen</h4><p>Klicke im Explorer-Panel (linke Seite) auf das „Neue Datei"-Icon. Name: <code class="ic">hallo.py</code></p></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><h4>Code eingeben</h4><p>Tippe exakt diesen Code in die neue Datei:</p></div></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · hallo.py</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Mein erstes Python-Programm</span>
+<span class="fn">print</span>(<span class="str">"Hallo, Welt!"</span>)</pre>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">5</div><div class="step-body"><h4>Datei speichern</h4><p>Windows: <span class="key">Strg</span>+<span class="key">S</span> | macOS: <span class="key">Cmd</span>+<span class="key">S</span>. Der Punkt im Tab-Titel verschwindet — das heißt: gespeichert.</p></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><h4>Terminal öffnen und Programm starten</h4><p>VS Code: Ansicht → Terminal (oder <span class="key">Strg</span>+<span class="key">`</span>). Dann:</p></div></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Terminal</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Windows:</span>
+python hallo.py
+
+<span class="cm"># macOS:</span>
+python3 hallo.py</pre>
+  </div>
+
+  <p class="tx">Du siehst: <code class="ic">Hallo, Welt!</code></p>
+  <div class="box info"><div class="box-icon">🎉</div><div class="box-body"><div class="box-title">Herzlichen Glückwunsch!</div><div class="box-text">Du hast soeben dein erstes Python-Programm geschrieben und ausgeführt. Was auch immer danach kommt — dieser Moment zählt.</div></div></div>
+
+  <h2 class="ch">Teil 2: HTML — Erste Webseite</h2>
+  <p class="tx">Erstelle eine neue Datei in deinem <code class="ic">codecraft</code>-Ordner: <code class="ic">index.html</code></p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">HTML · index.html</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="tag">&lt;!DOCTYPE html&gt;</span>
+<span class="tag">&lt;html</span> <span class="attr">lang</span>=<span class="val">"de"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;head&gt;</span>
+  <span class="tag">&lt;meta</span> <span class="attr">charset</span>=<span class="val">"UTF-8"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;title&gt;</span>Meine erste Seite<span class="tag">&lt;/title&gt;</span>
+<span class="tag">&lt;/head&gt;</span>
+<span class="tag">&lt;body&gt;</span>
+  <span class="tag">&lt;h1&gt;</span>Hallo, Welt!<span class="tag">&lt;/h1&gt;</span>
+  <span class="tag">&lt;p&gt;</span>Das ist meine erste Webseite. Ich kann HTML!<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/body&gt;</span>
+<span class="tag">&lt;/html&gt;</span></pre>
+  </div>
+  <p class="tx">Speichern → Datei im Explorer/Finder doppelklicken → Browser öffnet die Seite. Das bist du — deine erste Website.</p>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Einrichtung unter macOS</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Debuggen & Fehler lösen</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-debug" data-mod="Modul 1" data-title="Debuggen & Fehler lösen">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 6</div>
+  <h1 class="lesson-title">Debuggen: Fehler finden und lösen</h1>
+  <p class="lesson-intro">Fehler im Code sind kein Versagen — sie sind normaler Teil des Programmierens. Jeder macht sie. Der Unterschied liegt im systematischen Umgang damit.</p>
+
+  <h2 class="ch">Die drei Fehlerarten</h2>
+
+  <h3 class="ch">1. Syntaxfehler — Der Code ist grammatikalisch falsch</h3>
+  <p class="tx">Python versteht den Code nicht und verweigert die Ausführung. Die Fehlermeldung enthält fast immer die Zeilennummer.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Syntaxfehler</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># FALSCH: fehlende schließende Klammer</span>
+<span class="fn">print</span>(<span class="str">"Hallo"</span>
+
+<span class="cm"># Fehlermeldung:</span>
+<span class="cm"># SyntaxError: '(' was never closed</span>
+
+<span class="cm"># RICHTIG:</span>
+<span class="fn">print</span>(<span class="str">"Hallo"</span>)</pre>
+  </div>
+
+  <h3 class="ch">2. Laufzeitfehler — Der Code läuft, stürzt aber ab</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Laufzeitfehler</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># FALSCH: Division durch Null</span>
+ergebnis <span class="op">=</span> <span class="num">10</span> <span class="op">/</span> <span class="num">0</span>
+<span class="cm"># ZeroDivisionError: division by zero</span>
+
+<span class="cm"># FALSCH: String in Zahl umwandeln</span>
+zahl <span class="op">=</span> <span class="fn">int</span>(<span class="str">"abc"</span>)
+<span class="cm"># ValueError: invalid literal for int()</span></pre>
+  </div>
+
+  <h3 class="ch">3. Logikfehler — Läuft, aber falsches Ergebnis</h3>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Logikfehler</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Ziel: Durchschnitt von 3 und 7</span>
+ergebnis <span class="op">=</span> <span class="num">3</span> <span class="op">+</span> <span class="num">7</span> <span class="op">/</span> <span class="num">2</span>   <span class="cm"># Falsch! Punkt vor Strich → 3+3.5 = 6.5</span>
+<span class="fn">print</span>(ergebnis)         <span class="cm"># Ausgabe: 6.5 (nicht 5.0!)</span>
+
+<span class="cm"># RICHTIG: Klammern setzen</span>
+ergebnis <span class="op">=</span> (<span class="num">3</span> <span class="op">+</span> <span class="num">7</span>) <span class="op">/</span> <span class="num">2</span>  <span class="cm"># 5.0 ✓</span></pre>
+  </div>
+
+  <h2 class="ch">Debugging-Strategie in 5 Schritten</h2>
+  <ol class="nlist">
+    <li><strong class="hl">Fehlermeldung vollständig lesen</strong> — Sie enthält die Fehlerart, Dateiname und Zeilennummer</li>
+    <li><strong class="hl">Zeilennummer aufsuchen</strong> — Der Fehler ist oft eine Zeile davor oder genau dort</li>
+    <li><strong class="hl">print() als Debuggingwerkzeug</strong> — Zwischenwerte ausgeben, um zu verstehen, was der Code wirklich macht</li>
+    <li><strong class="hl">Laut vorlesen</strong> — Wenn du den Code vorliest, fallen logische Fehler oft auf</li>
+    <li><strong class="hl">Suchmaschine nutzen</strong> — Die Fehlermeldung googeln. Diese Fehler hat jeder schon gehabt.</li>
+  </ol>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — print() zum Debuggen</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">def</span> <span class="fn">berechne</span>(a, b):
+    <span class="fn">print</span>(<span class="str">f"a = </span><span class="mt">{a}</span><span class="str">, b = </span><span class="mt">{b}</span><span class="str">"</span>)   <span class="cm"># Debug-Ausgabe</span>
+    ergebnis <span class="op">=</span> a <span class="op">+</span> b
+    <span class="fn">print</span>(<span class="str">f"ergebnis = </span><span class="mt">{ergebnis}</span><span class="str">"</span>)   <span class="cm"># Debug-Ausgabe</span>
+    <span class="kw">return</span> ergebnis</pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Erstes Programm</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Typische Anfängerfehler</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m1-fehler" data-mod="Modul 1" data-title="Typische Anfängerfehler">
+  <div class="lesson-eyebrow">Modul 1 · Lektion 7</div>
+  <h1 class="lesson-title">Typische Anfängerfehler — und wie du sie vermeidest</h1>
+  <p class="lesson-intro">Diese Liste hilft dir, die häufigsten Fehler zu kennen, bevor du sie selbst machst. Jeder dieser Fehler wurde von jedem Anfänger gemacht — du bist nicht allein.</p>
+
+  <h2 class="ch">Python-Fehler</h2>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #1: Einrückung (IndentationError)</div><div class="box-text">Python verwendet Einrückungen als Strukturelement. 4 Leerzeichen oder 1 Tab — aber nie beides mischen. Konsistenz ist zwingend.</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># FALSCH: fehlende Einrückung</span>
+<span class="kw">def</span> <span class="fn">sag_hallo</span>():
+<span class="fn">print</span>(<span class="str">"Hallo"</span>)  <span class="cm"># IndentationError!</span>
+
+<span class="cm"># RICHTIG: 4 Leerzeichen</span>
+<span class="kw">def</span> <span class="fn">sag_hallo</span>():
+    <span class="fn">print</span>(<span class="str">"Hallo"</span>)  <span class="cm"># ✓</span></pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #2: Anführungszeichen-Mismatch</div><div class="box-text">Strings müssen mit denselben Anführungszeichen beginnen und enden. Einfache (') und doppelte (") sind gleichwertig — aber nicht mischbar.</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># FALSCH:</span>
+name <span class="op">=</span> <span class="str">'Anna"</span>    <span class="cm"># SyntaxError</span>
+
+<span class="cm"># RICHTIG:</span>
+name <span class="op">=</span> <span class="str">'Anna'</span>    <span class="cm"># oder</span>
+name <span class="op">=</span> <span class="str">"Anna"</span>    <span class="cm"># beides korrekt</span></pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #3: Groß-/Kleinschreibung bei Variablen</div><div class="box-text">Python ist case-sensitive. <code class="ic">Name</code> und <code class="ic">name</code> sind zwei verschiedene Variablen!</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>Alter <span class="op">=</span> <span class="num">25</span>
+<span class="fn">print</span>(alter)   <span class="cm"># NameError: name 'alter' is not defined!</span>
+<span class="fn">print</span>(Alter)   <span class="cm"># 25 ✓</span></pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #4: input() liefert immer einen String</div><div class="box-text">Selbst wenn der Nutzer eine Zahl eingibt — <code class="ic">input()</code> gibt immer Text zurück. Für Rechnungen muss konvertiert werden.</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># FALSCH: TypeError bei Rechnung</span>
+alter <span class="op">=</span> <span class="fn">input</span>(<span class="str">"Alter: "</span>)
+geburtsjahr <span class="op">=</span> <span class="num">2024</span> <span class="op">-</span> alter   <span class="cm"># TypeError: int - str</span>
+
+<span class="cm"># RICHTIG: Konvertierung zu int</span>
+alter <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Alter: "</span>))
+geburtsjahr <span class="op">=</span> <span class="num">2024</span> <span class="op">-</span> alter   <span class="cm"># ✓</span></pre>
+  </div>
+
+  <h2 class="ch">HTML-Fehler</h2>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #5: Tags nicht geschlossen</div><div class="box-text">Jeder öffnende Tag braucht einen schließenden Tag — außer "void elements" wie <code class="ic">&lt;br&gt;</code>, <code class="ic">&lt;img&gt;</code>, <code class="ic">&lt;input&gt;</code>.</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">HTML</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm">&lt;!-- FALSCH --&gt;</span>
+<span class="tag">&lt;p&gt;</span>Text ohne schließenden Tag
+<span class="tag">&lt;p&gt;</span>Zweiter Absatz
+
+<span class="cm">&lt;!-- RICHTIG --&gt;</span>
+<span class="tag">&lt;p&gt;</span>Text mit schließendem Tag<span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;p&gt;</span>Zweiter Absatz<span class="tag">&lt;/p&gt;</span></pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Fehler #6: Falsche Verschachtelung</div><div class="box-text">Tags müssen in der Reihenfolge ihres Öffnens wieder geschlossen werden — wie Klammern in der Mathematik.</div></div></div>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">HTML</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm">&lt;!-- FALSCH --&gt;</span>
+<span class="tag">&lt;b&gt;&lt;i&gt;</span>Text<span class="tag">&lt;/b&gt;&lt;/i&gt;</span>
+
+<span class="cm">&lt;!-- RICHTIG --&gt;</span>
+<span class="tag">&lt;b&gt;&lt;i&gt;</span>Text<span class="tag">&lt;/i&gt;&lt;/b&gt;</span></pre>
+  </div>
+
+  <div class="quiz" id="q1">
+    <div class="quiz-q">Was ist der häufigste Grund für einen <code class="ic">NameError</code> in Python?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answerQuiz('q1', this, false)"><span class="quiz-opt-marker">A</span>Der Variablenname enthält Zahlen</button>
+      <button class="quiz-opt" onclick="answerQuiz('q1', this, true)"><span class="quiz-opt-marker">B</span>Groß-/Kleinschreibung stimmt nicht überein (z.B. <code>Name</code> statt <code>name</code>)</button>
+      <button class="quiz-opt" onclick="answerQuiz('q1', this, false)"><span class="quiz-opt-marker">C</span>Es wurde kein Semikolon gesetzt</button>
+      <button class="quiz-opt" onclick="answerQuiz('q1', this, false)"><span class="quiz-opt-marker">D</span>Die Datei wurde nicht gespeichert</button>
+    </div>
+    <div class="quiz-feedback" id="q1-feedback"></div>
+    <button class="quiz-next" id="q1-next" onclick="navLesson(1)">Nächste Lektion →</button>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Debuggen & Fehler lösen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Modul 2: Variablen</div></button>
+  </div>
+</article>
+
+<!-- ════════════════════════════════════════════════════════
+  MODUL 2
+════════════════════════════════════════════════════════ -->
+<article class="lesson" data-id="m2-aufbau" data-mod="Modul 2" data-title="Variablen & Datentypen">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 1</div>
+  <h1 class="lesson-title">Variablen & Datentypen</h1>
+  <p class="lesson-intro">Variablen sind benannte Speicherplätze. Datentypen definieren, welche Art von Wert darin steckt. Beides ist das Herzstück jedes Programms.</p>
+
+  <h2 class="ch">Was ist eine Variable?</h2>
+  <p class="tx">Stelle dir eine Variable wie eine beschriftete Schachtel vor. Du legst einen Wert hinein, gibst der Schachtel einen Namen, und kannst sie später aufmachen, um den Wert zu lesen oder zu verändern.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Variable erstellen (zuweisen)</span>
+name <span class="op">=</span> <span class="str">"Anna"</span>
+alter <span class="op">=</span> <span class="num">28</span>
+groesse <span class="op">=</span> <span class="num">1.72</span>
+aktiv <span class="op">=</span> <span class="kw">True</span>
+
+<span class="cm"># Variable lesen</span>
+<span class="fn">print</span>(name)    <span class="cm"># Anna</span>
+<span class="fn">print</span>(alter)   <span class="cm"># 28</span>
+
+<span class="cm"># Variable verändern</span>
+alter <span class="op">=</span> <span class="num">29</span>
+<span class="fn">print</span>(alter)   <span class="cm"># 29</span></pre>
+  </div>
+
+  <h2 class="ch">Regeln für Variablennamen</h2>
+  <ul class="blist">
+    <li>Darf Buchstaben, Zahlen und Unterstriche enthalten: <code class="ic">mein_name_1</code></li>
+    <li>Muss mit Buchstabe oder Unterstrich beginnen: <code class="ic">_privat</code> ✓, <code class="ic">1name</code> ✗</li>
+    <li>Keine Python-Schlüsselwörter: <code class="ic">if</code>, <code class="ic">for</code>, <code class="ic">class</code>, <code class="ic">return</code> etc. sind reserviert</li>
+    <li>Konvention: <strong class="hl">snake_case</strong> — alles klein, Wörter mit Unterstrich trennen: <code class="ic">mein_name</code>, <code class="ic">max_wert</code></li>
+  </ul>
+
+  <div class="box tip"><div class="box-icon">✨</div><div class="box-body"><div class="box-title">Gute Namen sparen Zeit</div><div class="box-text"><code class="ic">x</code> oder <code class="ic">temp</code> sind kryptisch. <code class="ic">benutzername</code>, <code class="ic">gesamtpreis</code>, <code class="ic">max_versuche</code> erklären sich selbst. Guter Code liest sich wie Prosa.</div></div></div>
+
+  <h2 class="ch">Die wichtigsten Datentypen</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Alle Grundtypen</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># int — ganze Zahlen</span>
+alter <span class="op">=</span> <span class="num">25</span>
+anzahl <span class="op">=</span> <span class="op">-</span><span class="num">3</span>
+bevoelkerung <span class="op">=</span> <span class="num">8_000_000</span>   <span class="cm"># _ für Lesbarkeit erlaubt</span>
+
+<span class="cm"># float — Dezimalzahlen</span>
+preis <span class="op">=</span> <span class="num">19.99</span>
+pi <span class="op">=</span> <span class="num">3.14159</span>
+temperatur <span class="op">=</span> <span class="op">-</span><span class="num">7.5</span>
+
+<span class="cm"># str — Zeichenketten (Strings)</span>
+vorname <span class="op">=</span> <span class="str">"Anna"</span>
+satz <span class="op">=</span> <span class="str">'Das ist ein Satz.'</span>
+mehrzeilig <span class="op">=</span> <span class="str">"""Zeile 1
+Zeile 2
+Zeile 3"""</span>
+
+<span class="cm"># bool — Wahrheitswerte</span>
+aktiv <span class="op">=</span> <span class="kw">True</span>
+fertig <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cm"># None — kein Wert</span>
+ergebnis <span class="op">=</span> <span class="kw">None</span>
+
+<span class="cm"># Typ abfragen</span>
+<span class="fn">print</span>(<span class="fn">type</span>(alter))    <span class="cm"># &lt;class 'int'&gt;</span>
+<span class="fn">print</span>(<span class="fn">type</span>(preis))    <span class="cm"># &lt;class 'float'&gt;</span>
+<span class="fn">print</span>(<span class="fn">type</span>(vorname))  <span class="cm"># &lt;class 'str'&gt;</span></pre>
+  </div>
+
+  <h2 class="ch">Listen, Tupel, Dictionaries</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Sammlungstypen</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># list — geordnet, veränderlich</span>
+namen <span class="op">=</span> [<span class="str">"Anna"</span>, <span class="str">"Max"</span>, <span class="str">"Lisa"</span>]
+zahlen <span class="op">=</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
+gemischt <span class="op">=</span> [<span class="num">1</span>, <span class="str">"Text"</span>, <span class="kw">True</span>]
+
+<span class="fn">print</span>(namen[<span class="num">0</span>])    <span class="cm"># Anna (Index beginnt bei 0!)</span>
+namen.append(<span class="str">"Tom"</span>)   <span class="cm"># Element hinzufügen</span>
+
+<span class="cm"># tuple — geordnet, UNVERÄNDERLICH</span>
+koordinate <span class="op">=</span> (<span class="num">52.5</span>, <span class="num">13.4</span>)   <span class="cm"># Breiten-/Längengrad</span>
+
+<span class="cm"># dict — Schlüssel-Wert-Paare</span>
+person <span class="op">=</span> {
+    <span class="str">"name"</span>: <span class="str">"Anna"</span>,
+    <span class="str">"alter"</span>: <span class="num">28</span>,
+    <span class="str">"stadt"</span>: <span class="str">"Berlin"</span>
+}
+<span class="fn">print</span>(person[<span class="str">"name"</span>])   <span class="cm"># Anna</span>
+<span class="fn">print</span>(person.get(<span class="str">"alter"</span>))   <span class="cm"># 28 (sicherer Zugriff)</span></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Anfängerfehler</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Operatoren</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-operatoren" data-mod="Modul 2" data-title="Operatoren">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 2</div>
+  <h1 class="lesson-title">Operatoren</h1>
+  <p class="lesson-intro">Operatoren verknüpfen Werte, führen Berechnungen durch und vergleichen. Sie sind die Rechenzeichen der Programmierung.</p>
+
+  <h2 class="ch">Arithmetische Operatoren</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>a, b <span class="op">=</span> <span class="num">15</span>, <span class="num">4</span>
+
+<span class="fn">print</span>(a <span class="op">+</span> b)    <span class="cm"># 19  — Addition</span>
+<span class="fn">print</span>(a <span class="op">-</span> b)    <span class="cm"># 11  — Subtraktion</span>
+<span class="fn">print</span>(a <span class="op">*</span> b)    <span class="cm"># 60  — Multiplikation</span>
+<span class="fn">print</span>(a <span class="op">/</span> b)    <span class="cm"># 3.75 — Division (immer float)</span>
+<span class="fn">print</span>(a <span class="op">//</span> b)   <span class="cm"># 3   — Ganzzahldivision (abrunden)</span>
+<span class="fn">print</span>(a <span class="op">%</span> b)    <span class="cm"># 3   — Modulo (Rest der Division)</span>
+<span class="fn">print</span>(a <span class="op">**</span> b)   <span class="cm"># 50625 — Potenz (15^4)</span>
+<span class="fn">print</span>(<span class="num">2</span> <span class="op">**</span> <span class="num">8</span>)   <span class="cm"># 256  — 2 hoch 8</span></pre>
+  </div>
+
+  <h2 class="ch">Vergleichsoperatoren</h2>
+  <p class="tx">Vergleichsoperatoren liefern immer <code class="ic">True</code> oder <code class="ic">False</code>.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>x <span class="op">=</span> <span class="num">5</span>
+
+<span class="fn">print</span>(x <span class="op">==</span> <span class="num">5</span>)   <span class="cm"># True  — Gleichheit (DOPPELTES Gleichzeichen!)</span>
+<span class="fn">print</span>(x <span class="op">!=</span> <span class="num">3</span>)   <span class="cm"># True  — Ungleich</span>
+<span class="fn">print</span>(x <span class="op">&gt;</span> <span class="num">4</span>)    <span class="cm"># True  — Größer als</span>
+<span class="fn">print</span>(x <span class="op">&lt;</span> <span class="num">10</span>)   <span class="cm"># True  — Kleiner als</span>
+<span class="fn">print</span>(x <span class="op">&gt;=</span> <span class="num">5</span>)   <span class="cm"># True  — Größer oder gleich</span>
+<span class="fn">print</span>(x <span class="op">&lt;=</span> <span class="num">4</span>)   <span class="cm"># False — Kleiner oder gleich</span></pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">= vs ==</div><div class="box-text">Ein <code class="ic">=</code> weist einen Wert zu. Zwei <code class="ic">==</code> vergleichen. Das ist einer der häufigsten Anfängerfehler!</div></div></div>
+
+  <h2 class="ch">Logische Operatoren</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>alter <span class="op">=</span> <span class="num">25</span>
+hat_ausweis <span class="op">=</span> <span class="kw">True</span>
+
+<span class="fn">print</span>(alter <span class="op">&gt;=</span> <span class="num">18</span> <span class="op">and</span> hat_ausweis)   <span class="cm"># True — beide müssen wahr sein</span>
+<span class="fn">print</span>(alter <span class="op">&lt;</span> <span class="num">18</span> <span class="op">or</span> hat_ausweis)     <span class="cm"># True — mindestens eines muss wahr sein</span>
+<span class="fn">print</span>(<span class="op">not</span> hat_ausweis)              <span class="cm"># False — Negation</span></pre>
+  </div>
+
+  <h2 class="ch">String-Operatoren</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>vorname <span class="op">=</span> <span class="str">"Anna"</span>
+nachname <span class="op">=</span> <span class="str">"Müller"</span>
+
+<span class="cm"># Konkatenation (+ verbindet Strings)</span>
+vollname <span class="op">=</span> vorname <span class="op">+</span> <span class="str">" "</span> <span class="op">+</span> nachname
+<span class="fn">print</span>(vollname)   <span class="cm"># Anna Müller</span>
+
+<span class="cm"># f-String (empfohlen — moderner und lesbarer)</span>
+<span class="fn">print</span>(<span class="str">f"Name: </span><span class="mt">{vorname}</span><span class="str"> </span><span class="mt">{nachname}</span><span class="str">"</span>)   <span class="cm"># Name: Anna Müller</span>
+
+<span class="cm"># Wiederholung</span>
+<span class="fn">print</span>(<span class="str">"Ha"</span> <span class="op">*</span> <span class="num">3</span>)   <span class="cm"># HaHaHa</span>
+
+<span class="cm"># Enthält?</span>
+<span class="fn">print</span>(<span class="str">"Anna"</span> <span class="op">in</span> vollname)   <span class="cm"># True</span></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Variablen & Datentypen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Bedingungen</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-bedingungen" data-mod="Modul 2" data-title="Bedingungen (if/elif/else)">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 3</div>
+  <h1 class="lesson-title">Bedingungen — Programme, die entscheiden</h1>
+  <p class="lesson-intro">Bedingungen erlauben deinem Programm, Entscheidungen zu treffen. Genau wie im echten Leben: Wenn X, dann Y. Sonst Z.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — if / elif / else</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>alter <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Wie alt bist du? "</span>))
+
+<span class="kw">if</span> alter <span class="op">&gt;=</span> <span class="num">18</span>:
+    <span class="fn">print</span>(<span class="str">"Volljährig — Zutritt erlaubt."</span>)
+<span class="kw">elif</span> alter <span class="op">&gt;=</span> <span class="num">16</span>:
+    <span class="fn">print</span>(<span class="str">"Fast volljährig — eingeschränkter Zutritt."</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Minderjährig — kein Zutritt."</span>)</pre>
+  </div>
+
+  <h2 class="ch">Aufbau erklärt</h2>
+  <ul class="blist">
+    <li><code class="ic">if</code> — Startet die Bedingung. Doppelpunkt am Ende ist Pflicht. Einrückung ist Pflicht.</li>
+    <li><code class="ic">elif</code> — Optional. Weitere Bedingung, wenn die erste falsch war. Beliebig viele möglich.</li>
+    <li><code class="ic">else</code> — Optional. Auffangfall — läuft, wenn alle anderen Bedingungen falsch sind.</li>
+  </ul>
+
+  <h2 class="ch">Verschachtelte Bedingungen</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>wetter <span class="op">=</span> <span class="str">"Regen"</span>
+hat_schirm <span class="op">=</span> <span class="kw">True</span>
+
+<span class="kw">if</span> wetter <span class="op">==</span> <span class="str">"Regen"</span>:
+    <span class="kw">if</span> hat_schirm:
+        <span class="fn">print</span>(<span class="str">"Es regnet, aber du hast einen Schirm."</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"Es regnet und du wirst nass!"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Kein Regen — genieß den Tag!"</span>)</pre>
+  </div>
+
+  <h2 class="ch">Einzeiliger Ternär-Ausdruck</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>alter <span class="op">=</span> <span class="num">20</span>
+status <span class="op">=</span> <span class="str">"Volljährig"</span> <span class="kw">if</span> alter <span class="op">&gt;=</span> <span class="num">18</span> <span class="kw">else</span> <span class="str">"Minderjährig"</span>
+<span class="fn">print</span>(status)   <span class="cm"># Volljährig</span></pre>
+  </div>
+
+  <div class="quiz" id="q2">
+    <div class="quiz-q">Was passiert, wenn keine der Bedingungen in einer if/elif-Kette zutrifft und es kein <code class="ic">else</code> gibt?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answerQuiz('q2', this, false)"><span class="quiz-opt-marker">A</span>Python wirft einen Fehler</button>
+      <button class="quiz-opt" onclick="answerQuiz('q2', this, false)"><span class="quiz-opt-marker">B</span>Die erste Bedingung wird trotzdem ausgeführt</button>
+      <button class="quiz-opt" onclick="answerQuiz('q2', this, true)"><span class="quiz-opt-marker">C</span>Nichts passiert — der Block wird einfach übersprungen</button>
+      <button class="quiz-opt" onclick="answerQuiz('q2', this, false)"><span class="quiz-opt-marker">D</span>Das Programm stoppt automatisch</button>
+    </div>
+    <div class="quiz-feedback" id="q2-feedback"></div>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Operatoren</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Schleifen</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-schleifen" data-mod="Modul 2" data-title="Schleifen (for/while)">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 4</div>
+  <h1 class="lesson-title">Schleifen — Code wiederholen</h1>
+  <p class="lesson-intro">Schleifen sind eines der mächtigsten Konzepte in der Programmierung. Statt 100 Zeilen zu schreiben, lässt du eine Schleife 100 Mal laufen.</p>
+
+  <h2 class="ch">for-Schleife</h2>
+  <p class="tx">Iteriert über eine Sequenz — Liste, String, Zahlenbereich.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Über Zahlenbereich</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="fn">print</span>(i)          <span class="cm"># 0, 1, 2, 3, 4</span>
+
+<span class="cm"># Über eine Liste</span>
+fruechte <span class="op">=</span> [<span class="str">"Apfel"</span>, <span class="str">"Banane"</span>, <span class="str">"Kirsche"</span>]
+<span class="kw">for</span> frucht <span class="kw">in</span> fruechte:
+    <span class="fn">print</span>(<span class="str">f"Ich esse: </span><span class="mt">{frucht}</span><span class="str">"</span>)
+
+<span class="cm"># Mit Index (enumerate)</span>
+<span class="kw">for</span> i, frucht <span class="kw">in</span> <span class="fn">enumerate</span>(fruechte):
+    <span class="fn">print</span>(<span class="str">f"</span><span class="mt">{i}</span><span class="str">: </span><span class="mt">{frucht}</span><span class="str">"</span>)   <span class="cm"># 0: Apfel, 1: Banane...</span>
+
+<span class="cm"># Über String</span>
+<span class="kw">for</span> buchstabe <span class="kw">in</span> <span class="str">"Hallo"</span>:
+    <span class="fn">print</span>(buchstabe)   <span class="cm"># H, a, l, l, o</span></pre>
+  </div>
+
+  <h2 class="ch">while-Schleife</h2>
+  <p class="tx">Läuft so lange, wie eine Bedingung wahr ist.</p>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>zahl <span class="op">=</span> <span class="num">1</span>
+<span class="kw">while</span> zahl <span class="op">&lt;=</span> <span class="num">5</span>:
+    <span class="fn">print</span>(zahl)
+    zahl <span class="op">+=</span> <span class="num">1</span>    <span class="cm"># Kurzschreibweise für zahl = zahl + 1</span>
+
+<span class="cm"># Endlosschleife mit break</span>
+<span class="kw">while</span> <span class="kw">True</span>:
+    eingabe <span class="op">=</span> <span class="fn">input</span>(<span class="str">"Passwort: "</span>)
+    <span class="kw">if</span> eingabe <span class="op">==</span> <span class="str">"geheim"</span>:
+        <span class="fn">print</span>(<span class="str">"Zugang gewährt!"</span>)
+        <span class="kw">break</span>   <span class="cm"># Schleife verlassen</span>
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"Falsch. Nochmal."</span>)</pre>
+  </div>
+
+  <div class="box warn"><div class="box-icon">⚠️</div><div class="box-body"><div class="box-title">Endlosschleife</div><div class="box-text">Eine <code class="ic">while</code>-Schleife, deren Bedingung nie <code class="ic">False</code> wird, läuft ewig und legt dein Programm lahm. Stelle sicher, dass der Abbruchzustand irgendwann erreicht wird. Notfall: <span class="key">Strg</span>+<span class="key">C</span> stoppt das Programm im Terminal.</div></div></div>
+
+  <h2 class="ch">break und continue</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>):
+    <span class="kw">if</span> i <span class="op">==</span> <span class="num">7</span>:
+        <span class="kw">break</span>       <span class="cm"># Schleife sofort beenden</span>
+    <span class="kw">if</span> i <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>:
+        <span class="kw">continue</span>    <span class="cm"># Diesen Durchlauf überspringen</span>
+    <span class="fn">print</span>(i)        <span class="cm"># Nur ungerade Zahlen unter 7: 1,3,5</span></pre>
+  </div>
+
+  <h2 class="ch">List Comprehension — kompakte Schleifen</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Klassisch</span>
+quadrate <span class="op">=</span> []
+<span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    quadrate.append(x<span class="op">**</span><span class="num">2</span>)
+
+<span class="cm"># Kompakt (List Comprehension) — pythonisch</span>
+quadrate <span class="op">=</span> [x<span class="op">**</span><span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]
+<span class="fn">print</span>(quadrate)   <span class="cm"># [0, 1, 4, 9, 16]</span>
+
+<span class="cm"># Mit Bedingung</span>
+gerade <span class="op">=</span> [x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> x <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span>]
+<span class="fn">print</span>(gerade)     <span class="cm"># [0, 2, 4, 6, 8]</span></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Bedingungen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Funktionen</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-funktionen" data-mod="Modul 2" data-title="Funktionen">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 5</div>
+  <h1 class="lesson-title">Funktionen — Code wiederverwenden</h1>
+  <p class="lesson-intro">Eine Funktion ist ein benannter, wiederverwendbarer Code-Block. Statt denselben Code mehrfach zu schreiben, definierst du ihn einmal und rufst ihn beliebig oft auf.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Grundstruktur</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">def</span> <span class="fn">berechne_flaeche</span>(breite, hoehe):
+    <span class="str">"""Berechnet die Fläche eines Rechtecks."""</span>
+    flaeche <span class="op">=</span> breite <span class="op">*</span> hoehe
+    <span class="kw">return</span> flaeche
+
+<span class="cm"># Funktion aufrufen</span>
+ergebnis <span class="op">=</span> <span class="fn">berechne_flaeche</span>(<span class="num">5</span>, <span class="num">3</span>)
+<span class="fn">print</span>(ergebnis)   <span class="cm"># 15</span>
+
+<span class="cm"># Direkt in print()</span>
+<span class="fn">print</span>(<span class="fn">berechne_flaeche</span>(<span class="num">10</span>, <span class="num">4</span>))   <span class="cm"># 40</span></pre>
+  </div>
+
+  <h2 class="ch">Standardparameter (Default Values)</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">def</span> <span class="fn">begruesse</span>(name, sprache<span class="op">=</span><span class="str">"Deutsch"</span>):
+    <span class="kw">if</span> sprache <span class="op">==</span> <span class="str">"Deutsch"</span>:
+        <span class="kw">return</span> <span class="str">f"Hallo, </span><span class="mt">{name}</span><span class="str">!"</span>
+    <span class="kw">elif</span> sprache <span class="op">==</span> <span class="str">"Englisch"</span>:
+        <span class="kw">return</span> <span class="str">f"Hello, </span><span class="mt">{name}</span><span class="str">!"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">f"Hola, </span><span class="mt">{name}</span><span class="str">!"</span>
+
+<span class="fn">print</span>(<span class="fn">begruesse</span>(<span class="str">"Anna"</span>))               <span class="cm"># Hallo, Anna!</span>
+<span class="fn">print</span>(<span class="fn">begruesse</span>(<span class="str">"John"</span>, <span class="str">"Englisch"</span>))   <span class="cm"># Hello, John!</span></pre>
+  </div>
+
+  <h2 class="ch">*args und **kwargs — Flexible Argumente</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># *args: beliebig viele Positionalargumente</span>
+<span class="kw">def</span> <span class="fn">summe</span>(<span class="op">*</span>zahlen):
+    <span class="kw">return</span> <span class="fn">sum</span>(zahlen)
+
+<span class="fn">print</span>(<span class="fn">summe</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>))       <span class="cm"># 6</span>
+<span class="fn">print</span>(<span class="fn">summe</span>(<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>))  <span class="cm"># 100</span>
+
+<span class="cm"># **kwargs: beliebig viele Schlüsselwort-Argumente</span>
+<span class="kw">def</span> <span class="fn">profil</span>(<span class="op">**</span>infos):
+    <span class="kw">for</span> key, wert <span class="kw">in</span> infos.items():
+        <span class="fn">print</span>(<span class="str">f"</span><span class="mt">{key}</span><span class="str">: </span><span class="mt">{wert}</span><span class="str">"</span>)
+
+<span class="fn">profil</span>(name<span class="op">=</span><span class="str">"Anna"</span>, alter<span class="op">=</span><span class="num">28</span>, stadt<span class="op">=</span><span class="str">"Berlin"</span>)</pre>
+  </div>
+
+  <h2 class="ch">Lambda — anonyme Einzeilerfunktionen</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre>quadrat <span class="op">=</span> <span class="kw">lambda</span> x: x<span class="op">**</span><span class="num">2</span>
+<span class="fn">print</span>(<span class="fn">quadrat</span>(<span class="num">5</span>))   <span class="cm"># 25</span>
+
+<span class="cm"># Nützlich für Sortierung</span>
+personen <span class="op">=</span> [(<span class="str">"Anna"</span>, <span class="num">28</span>), (<span class="str">"Max"</span>, <span class="num">22</span>), (<span class="str">"Lisa"</span>, <span class="num">35</span>)]
+personen.sort(<span class="attr">key</span><span class="op">=</span><span class="kw">lambda</span> p: p[<span class="num">1</span>])   <span class="cm"># Nach Alter sortieren</span>
+<span class="fn">print</span>(personen)   <span class="cm"># [('Max', 22), ('Anna', 28), ('Lisa', 35)]</span></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Schleifen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Klassen & OOP</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-klassen" data-mod="Modul 2" data-title="Klassen & OOP">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 6</div>
+  <h1 class="lesson-title">Klassen & Objekte</h1>
+  <p class="lesson-intro">Objektorientierte Programmierung (OOP) strukturiert Code um „Objekte" — Datenstrukturen mit Eigenschaften und Fähigkeiten. Eine Klasse ist der Bauplan, ein Objekt ist das fertige Produkt.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python — Klasse definieren</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">class</span> <span class="fn">Person</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name, alter):
+        self.name <span class="op">=</span> name    <span class="cm"># Attribut</span>
+        self.alter <span class="op">=</span> alter  <span class="cm"># Attribut</span>
+
+    <span class="kw">def</span> <span class="fn">vorstellen</span>(self):    <span class="cm"># Methode</span>
+        <span class="kw">return</span> <span class="str">f"Ich bin </span><span class="mt">{self.name}</span><span class="str">, </span><span class="mt">{self.alter}</span><span class="str"> Jahre alt."</span>
+
+    <span class="kw">def</span> <span class="fn">geburtstag</span>(self):
+        self.alter <span class="op">+=</span> <span class="num">1</span>
+        <span class="fn">print</span>(<span class="str">f"</span><span class="mt">{self.name}</span><span class="str"> ist jetzt </span><span class="mt">{self.alter}</span><span class="str">!"</span>)
+
+<span class="cm"># Objekte erstellen</span>
+person1 <span class="op">=</span> <span class="fn">Person</span>(<span class="str">"Anna"</span>, <span class="num">28</span>)
+person2 <span class="op">=</span> <span class="fn">Person</span>(<span class="str">"Max"</span>, <span class="num">34</span>)
+
+<span class="fn">print</span>(person1.<span class="fn">vorstellen</span>())   <span class="cm"># Ich bin Anna, 28 Jahre alt.</span>
+<span class="fn">print</span>(person2.alter)           <span class="cm"># 34</span>
+person1.<span class="fn">geburtstag</span>()           <span class="cm"># Anna ist jetzt 29!</span></pre>
+  </div>
+
+  <h2 class="ch">Vererbung</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">class</span> <span class="fn">Tier</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, name):
+        self.name <span class="op">=</span> name
+
+    <span class="kw">def</span> <span class="fn">atmen</span>(self):
+        <span class="fn">print</span>(<span class="str">f"</span><span class="mt">{self.name}</span><span class="str"> atmet."</span>)
+
+<span class="kw">class</span> <span class="fn">Hund</span>(<span class="fn">Tier</span>):   <span class="cm"># Erbt von Tier</span>
+    <span class="kw">def</span> <span class="fn">bellen</span>(self):
+        <span class="fn">print</span>(<span class="str">f"</span><span class="mt">{self.name}</span><span class="str">: Wuff!"</span>)
+
+bello <span class="op">=</span> <span class="fn">Hund</span>(<span class="str">"Bello"</span>)
+bello.<span class="fn">atmen</span>()   <span class="cm"># Geerbt von Tier: Bello atmet.</span>
+bello.<span class="fn">bellen</span>()  <span class="cm"># Hund-spezifisch: Bello: Wuff!</span></pre>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Funktionen</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Fehlerbehandlung</div></button>
+  </div>
+</article>
+
+<article class="lesson" data-id="m2-fehlerbehandlung" data-mod="Modul 2" data-title="Fehlerbehandlung & Module">
+  <div class="lesson-eyebrow">Modul 2 · Lektion 7</div>
+  <h1 class="lesson-title">Fehlerbehandlung, Module & Best Practices</h1>
+  <p class="lesson-intro">Professioneller Code stürzt nicht einfach ab — er behandelt Fehler elegant. Und guter Code ist nicht nur korrekt, sondern auch lesbar und wartbar.</p>
+
+  <h2 class="ch">try / except / finally</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">try</span>:
+    zahl <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Gib eine Zahl ein: "</span>))
+    ergebnis <span class="op">=</span> <span class="num">100</span> <span class="op">/</span> zahl
+    <span class="fn">print</span>(<span class="str">f"100 / </span><span class="mt">{zahl}</span><span class="str"> = </span><span class="mt">{ergebnis}</span><span class="str">"</span>)
+<span class="kw">except</span> <span class="fn">ValueError</span>:
+    <span class="fn">print</span>(<span class="str">"Fehler: Bitte eine gültige Zahl eingeben."</span>)
+<span class="kw">except</span> <span class="fn">ZeroDivisionError</span>:
+    <span class="fn">print</span>(<span class="str">"Fehler: Division durch Null ist nicht erlaubt."</span>)
+<span class="kw">except</span> <span class="fn">Exception</span> <span class="kw">as</span> e:
+    <span class="fn">print</span>(<span class="str">f"Unbekannter Fehler: </span><span class="mt">{e}</span><span class="str">"</span>)
+<span class="kw">finally</span>:
+    <span class="fn">print</span>(<span class="str">"Berechnung abgeschlossen."</span>)  <span class="cm"># läuft IMMER</span></pre>
+  </div>
+
+  <h2 class="ch">Module importieren</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="kw">import</span> math
+<span class="kw">import</span> random
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="fn">print</span>(math.sqrt(<span class="num">25</span>))      <span class="cm"># 5.0</span>
+<span class="fn">print</span>(math.pi)             <span class="cm"># 3.14159...</span>
+<span class="fn">print</span>(random.randint(<span class="num">1</span>, <span class="num">6</span>))  <span class="cm"># Würfelwurf</span>
+<span class="fn">print</span>(datetime.now())      <span class="cm"># Aktuelles Datum/Zeit</span></pre>
+  </div>
+
+  <h2 class="ch">Dateien lesen & schreiben</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python</span><button class="code-copy" onclick="copyCode(this)">Kopieren</button></div>
+    <pre><span class="cm"># Datei schreiben</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"notizen.txt"</span>, <span class="str">"w"</span>, <span class="attr">encoding</span><span class="op">=</span><span class="str">"utf-8"</span>) <span class="kw">as</span> datei:
+    datei.write(<span class="str">"Erste Zeile\n"</span>)
+    datei.write(<span class="str">"Zweite Zeile\n"</span>)
+
+<span class="cm"># Datei lesen</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"notizen.txt"</span>, <span class="str">"r"</span>, <span class="attr">encoding</span><span class="op">=</span><span class="str">"utf-8"</span>) <span class="kw">as</span> datei:
+    inhalt <span class="op">=</span> datei.read()
+    <span class="fn">print</span>(inhalt)
+
+<span class="cm"># Zeilenweise</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"notizen.txt"</span>) <span class="kw">as</span> datei:
+    <span class="kw">for</span> zeile <span class="kw">in</span> datei:
+        <span class="fn">print</span>(zeile.strip())</pre>
+  </div>
+
+  <h2 class="ch">Best Practices für sauberen Code</h2>
+  <ul class="blist">
+    <li><strong class="hl">DRY</strong> — Don't Repeat Yourself: Code duplizieren macht Wartung schwierig</li>
+    <li><strong class="hl">KISS</strong> — Keep It Simple: Einfache Lösungen sind wartbarer als clevere</li>
+    <li><strong class="hl">Sprechende Namen</strong>: <code class="ic">gesamtpreis</code> statt <code class="ic">gp</code></li>
+    <li><strong class="hl">Kommentiere das Warum</strong>, nicht das Was: <code class="ic"># +1 weil Index bei 0 beginnt</code></li>
+    <li><strong class="hl">Eine Funktion, eine Aufgabe</strong>: Kleine fokussierte Funktionen sind besser testbar</li>
+    <li><strong class="hl">Konsistente Formatierung</strong>: Black (Python-Formatter) automatisch nutzen</li>
+  </ul>
+
+  <div class="box info"><div class="box-icon">🎯</div><div class="box-body"><div class="box-title">Modul 2 abgeschlossen!</div><div class="box-text">Du kennst jetzt die Grundkonzepte jeder Programmiersprache. Modul 3 gibt dir das Nachschlagewerk für HTML und Python — jedes Element mit Syntax, Beispiel und Fehlerquellen.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Klassen & OOP</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Modul 3: HTML-Referenz</div></button>
+  </div>
+</article>
+
+<!-- ════════════════════════════════════════════════════════
+  MODUL 3 — HTML REFERENZ
+════════════════════════════════════════════════════════ -->
+<article class="lesson" data-id="m3-html-intro" data-mod="Modul 3" data-title="HTML-Referenz Übersicht">
+  <div class="lesson-eyebrow">Modul 3 · HTML-Referenz</div>
+  <h1 class="lesson-title">HTML-Referenz — Die 50 wichtigsten Elemente</h1>
+  <p class="lesson-intro">Jeder Eintrag enthält: Name, Syntax, Funktion, Anwendungsfall, Beispiel, häufige Fehler und Anfänger-Hinweis.</p>
+
+  <h2 class="ch">Dokumentstruktur</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;!DOCTYPE html&gt;</span><span class="ref-entry-badge">Struktur</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;!DOCTYPE html&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Deklariert den Dokumenttyp als HTML5 — erste Zeile jeder HTML-Datei</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">Immer als erste Zeile jeder HTML-Datei</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlt DOCTYPE: Browser schaltet in Quirks-Modus mit abweichendem Verhalten</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>&lt;!DOCTYPE html&gt;&lt;html lang="de"&gt;...</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Großbuchstaben bei DOCTYPE sind Konvention (nicht zwingend). Nur einmal, ganz am Anfang.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;html lang&gt;</span><span class="ref-entry-badge">Struktur</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;html lang="de"&gt;...&lt;/html&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Wurzelelement des Dokuments. lang definiert die Sprache für Screenreader und SEO</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">Umschließt das gesamte HTML-Dokument</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlende lang-Angabe beeinträchtigt Screenreader und Suchmaschinen</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">lang="de" für Deutsch, lang="en" für Englisch. Wichtig für Barrierefreiheit!</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;meta charset&gt;</span><span class="ref-entry-badge">Metadaten</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;meta charset="UTF-8"&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Definiert den Zeichensatz. UTF-8 unterstützt alle Sprachen inklusive Umlaute</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlt: Umlaute (ä, ö, ü) und Sonderzeichen werden falsch dargestellt</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Immer als erstes Kind von &lt;head&gt;. Void element — kein schließender Tag.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;meta viewport&gt;</span><span class="ref-entry-badge">Responsive</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Steuert die Darstellung auf mobilen Geräten für responsive Design</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlt: Seite ist auf Smartphones winzig und nicht zoombar</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Pflicht für jede moderne, mobile-freundliche Webseite.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Textstrukturierung</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;h1&gt; bis &lt;h6&gt;</span><span class="ref-entry-badge">Text</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;h1&gt;Hauptüberschrift&lt;/h1&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Überschriften-Hierarchie von h1 (wichtigste) bis h6 (unwichtigste)</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">h1: Seitentitel (nur einmal!), h2: Abschnitte, h3: Unterabschnitte</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">h1 mehrfach = schlechte SEO. Hierarchie überspringen (h1 → h3) = schlechte Semantik</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Nie Überschriften für visuelles Styling nutzen — dafür CSS. Semantik vor Aussehen.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;p&gt;</span><span class="ref-entry-badge">Text</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;p&gt;Absatztext.&lt;/p&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Absatz-Element mit automatischen Abständen oben und unten</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Block-Elemente (div, h1 etc.) dürfen nicht inside &lt;p&gt; stehen</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Standardelement für jeden Fließtext. Abstände per CSS steuern, nicht mit leeren &lt;p&gt;-Tags.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;strong&gt; / &lt;em&gt;</span><span class="ref-entry-badge">Text</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;strong&gt;wichtig&lt;/strong&gt;</code> / <code>&lt;em&gt;betont&lt;/em&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">strong = semantisch wichtig (fett), em = betont (kursiv)</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Nicht für rein visuelle Fettung/Kursivierung — dafür CSS (font-weight: bold)</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">strong und em haben semantische Bedeutung für Screenreader — kein Ersatz für &lt;b&gt;/&lt;i&gt;.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Links & Navigation</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;a href&gt;</span><span class="ref-entry-badge">Navigation</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;a href="https://example.com"&gt;Linktext&lt;/a&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Hyperlink zu einer anderen Seite, Anker oder E-Mail-Adresse</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">Navigation, externe Verweise, Downloads, E-Mail-Links</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">target="_blank" ohne rel="noopener noreferrer" = Sicherheitslücke (Tabnabbing)</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>&lt;a href="https://google.com" target="_blank" rel="noopener noreferrer"&gt;Google&lt;/a&gt;</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Lokale Links ohne Protokoll: href="seite.html". Anker: href="#abschnitt".</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Bilder & Medien</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;img&gt;</span><span class="ref-entry-badge">Medien</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;img src="bild.jpg" alt="Beschreibung" width="400" height="300"&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Bild einbinden — void element (kein schließender Tag)</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlendes alt-Attribut = Barrierefreiheitsverletzung und schlechte SEO</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">alt="" für rein dekorative Bilder (leer aber vorhanden!). width/height angeben vermeidet Layout-Sprünge beim Laden.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Formulare</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;form&gt;</span><span class="ref-entry-badge">Formular</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;form action="/senden" method="post"&gt;...&lt;/form&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Container für alle Formularelemente. Definiert Ziel-URL und HTTP-Methode</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlende action: Daten werden an aktuelle URL gesendet. GET statt POST: Daten in URL sichtbar!</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">method="post" für sensible Daten (Passwörter, E-Mails). method="get" nur für Suchformulare.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;input type&gt;</span><span class="ref-entry-badge">Formular</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Wichtige Typen</div><div class="ref-field-val"><code>text</code> | <code>email</code> | <code>password</code> | <code>number</code> | <code>checkbox</code> | <code>radio</code> | <code>file</code> | <code>submit</code> | <code>date</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Fehlendes name-Attribut: Wert wird beim Absenden nicht übermittelt!</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>&lt;input type="email" name="email" placeholder="du@beispiel.de" required&gt;</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Immer mit &lt;label for="id"&gt; verknüpfen. required für Pflichtfelder.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;label&gt;</span><span class="ref-entry-badge">Formular</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;label for="email"&gt;E-Mail-Adresse:&lt;/label&gt;&lt;input type="email" id="email"&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Beschriftung für Formularfeld. Klick auf Label aktiviert das Eingabefeld</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">for-Attribut muss mit id des Inputs übereinstimmen — nicht mit name!</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Pflicht für Barrierefreiheit. Nie Placeholder als Ersatz für Labels verwenden.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Tabellen</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;table&gt; / &lt;tr&gt; / &lt;th&gt; / &lt;td&gt;</span><span class="ref-entry-badge">Tabelle</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Grundstruktur</div><div class="ref-field-val"><code>&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Spalte&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr&gt;&lt;td&gt;Daten&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Tabellen für Layouts verwenden = veraltetes Anti-Pattern. Nur für tabellarische Daten!</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">thead/tbody/tfoot verbessern Semantik. colspan/rowspan für verbundene Zellen. scope="col/row" für Barrierefreiheit.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Semantische Struktur</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;header&gt; / &lt;nav&gt; / &lt;main&gt; / &lt;footer&gt;</span><span class="ref-entry-badge">Semantik</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">header</div><div class="ref-field-val">Kopfbereich einer Seite oder eines Abschnitts</div></div>
+      <div class="ref-field"><div class="ref-field-label">nav</div><div class="ref-field-val">Navigationsbereich. aria-label bei mehreren navs</div></div>
+      <div class="ref-field"><div class="ref-field-label">main</div><div class="ref-field-val">Hauptinhalt der Seite — nur einmal pro Seite!</div></div>
+      <div class="ref-field"><div class="ref-field-label">footer</div><div class="ref-field-val">Fußbereich. Nicht mit &lt;head&gt; verwechseln!</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Diese Elemente machen HTML für Screenreader, SEO und Entwickler verständlicher als &lt;div&gt;-Suppe.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;section&gt; / &lt;article&gt; / &lt;aside&gt;</span><span class="ref-entry-badge">Semantik</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">section</div><div class="ref-field-val">Thematischer Abschnitt — braucht eine Überschrift (h2/h3)</div></div>
+      <div class="ref-field"><div class="ref-field-label">article</div><div class="ref-field-val">Eigenständiger, wiederverwendbarer Inhalt (Blogpost, Kommentar)</div></div>
+      <div class="ref-field"><div class="ref-field-label">aside</div><div class="ref-field-val">Ergänzender Nebeninhalt — Seitenleiste, Werbung, verwandte Links</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Ohne Überschrift ist &lt;div&gt; oft besser als &lt;section&gt;. article könnte in einem RSS-Feed eigenständig stehen.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">&lt;details&gt; / &lt;summary&gt;</span><span class="ref-entry-badge">Interaktiv</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>&lt;details&gt;&lt;summary&gt;Klick mich&lt;/summary&gt;&lt;p&gt;Verborgener Inhalt&lt;/p&gt;&lt;/details&gt;</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Aufklappbarer Inhalt — ganz ohne JavaScript!</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">FAQ, Zusatzinfos, Spoiler, Akkordeons</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">open-Attribut hält es standardmäßig geöffnet. summary muss erstes Kind von details sein.</div></div>
+    </div>
+  </div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">Fehlerbehandlung & Module</div></button>
+    <button class="cnav-btn next" onclick="navLesson(1)"><div class="cnav-label">Weiter →</div><div class="cnav-title">Python-Referenz</div></button>
+  </div>
+</article>
+
+<!-- ════════════════════════════════════════════════════════
+  MODUL 3 — PYTHON REFERENZ
+════════════════════════════════════════════════════════ -->
+<article class="lesson" data-id="m3-python-intro" data-mod="Modul 3" data-title="Python-Referenz Übersicht">
+  <div class="lesson-eyebrow">Modul 3 · Python-Referenz</div>
+  <h1 class="lesson-title">Python-Referenz — Die 50 wichtigsten Elemente</h1>
+  <p class="lesson-intro">Vollständige Einträge mit Syntax, Funktion, Anwendungsfall, Codebeispiel, Fehlerquellen und Anfänger-Hinweis.</p>
+
+  <h2 class="ch">Grundlegende Funktionen</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">print()</span><span class="ref-entry-badge">Ausgabe</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>print(wert, end="\n", sep=" ")</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Gibt einen oder mehrere Werte in der Konsole aus</div></div>
+      <div class="ref-field"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">Ausgaben anzeigen, Debugging</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Kein Zeilenumbruch: end="" setzen. Mehrere Werte: Komma trennt sie mit Leerzeichen</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>print("Hallo") | print(f"Name: {name}") | print(1, 2, 3, sep="-")</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">f-Strings (f"...{var}...") sind die modernste und lesbarste Art, Variablen in Strings einzufügen.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">input()</span><span class="ref-entry-badge">Eingabe</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>eingabe = input("Prompt: ")</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Liest Benutzereingabe als String — IMMER als String, auch bei Zahlen!</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">input() gibt str zurück → bei Zahlen int() oder float() umwandeln</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>name = input("Name: ") | alter = int(input("Alter: "))</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">input() wartet bis Enter gedrückt wird. Prompt-Text erklärt dem Nutzer, was erwartet wird.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">len()</span><span class="ref-entry-badge">Sequenz</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>len(sequenz)</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Gibt die Anzahl der Elemente zurück — für str, list, tuple, dict, set</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">len(None) wirft TypeError — vorher auf None prüfen</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>len("Hallo") # 5 | len([1,2,3]) # 3 | len({"a":1,"b":2}) # 2</code></div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">range()</span><span class="ref-entry-badge">Sequenz</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>range(stop) | range(start, stop) | range(start, stop, step)</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">Funktion</div><div class="ref-field-val">Erzeugt eine Zahlensequenz — lazy, speichereffizient</div></div>
+      <div class="ref-field"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">stop ist EXKLUSIV: range(5) = 0,1,2,3,4 (nicht 5!)</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>range(5) → 0-4 | range(2,8) → 2-7 | range(0,10,2) → 0,2,4,6,8</code></div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">String-Methoden</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">str.split() / str.join()</span><span class="ref-entry-badge">String</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">split</div><div class="ref-field-val"><code>"a,b,c".split(",") → ["a","b","c"]</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">join</div><div class="ref-field-val"><code>",".join(["a","b","c"]) → "a,b,c"</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">join() erwartet eine Liste von Strings — int etc. müssen erst konvertiert werden</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">split() ohne Argument trennt bei jedem Whitespace. join() ist Gegenstück von split().</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">str.strip() / upper() / lower()</span><span class="ref-entry-badge">String</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">strip</div><div class="ref-field-val"><code>"  Hallo  ".strip() → "Hallo"</code> — entfernt Leerzeichen außen</div></div>
+      <div class="ref-field"><div class="ref-field-label">upper/lower</div><div class="ref-field-val"><code>"hallo".upper() → "HALLO"</code> | <code>"WELT".lower() → "welt"</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">Strings sind immutable — strip() erstellt einen neuen String, der Original bleibt unverändert</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Anwendung</div><div class="ref-field-val">strip() für Benutzereingaben bereinigen. lower() für case-insensitive Vergleiche.</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">str.replace() / str.find()</span><span class="ref-entry-badge">String</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">replace</div><div class="ref-field-val"><code>"Hallo Welt".replace("Welt","Python") → "Hallo Python"</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">find</div><div class="ref-field-val"><code>"Hallo".find("ll") → 2</code> (Index) | <code>-1</code> wenn nicht gefunden</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">find() gibt -1 (kein Fehler). index() gibt ValueError wenn nicht gefunden.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Listen-Methoden</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">list.append() / insert() / remove() / pop()</span><span class="ref-entry-badge">Liste</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">append</div><div class="ref-field-val"><code>lst.append(x)</code> — Element ans Ende anfügen. In-place, gibt None zurück!</div></div>
+      <div class="ref-field"><div class="ref-field-label">insert</div><div class="ref-field-val"><code>lst.insert(0, x)</code> — An Position einfügen</div></div>
+      <div class="ref-field"><div class="ref-field-label">remove</div><div class="ref-field-val"><code>lst.remove(x)</code> — Erstes Vorkommen entfernen. ValueError wenn nicht vorhanden</div></div>
+      <div class="ref-field"><div class="ref-field-label">pop</div><div class="ref-field-val"><code>lst.pop()</code> — Letztes Element entfernen UND zurückgeben</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">append() gibt None zurück → nie lst = lst.append(x) schreiben!</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">list.sort() / sorted()</span><span class="ref-entry-badge">Liste</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">sort</div><div class="ref-field-val"><code>lst.sort()</code> — Sortiert in-place. Gibt None zurück!</div></div>
+      <div class="ref-field"><div class="ref-field-label">sorted</div><div class="ref-field-val"><code>neu = sorted(lst)</code> — Gibt neue sortierte Liste zurück. Original unverändert.</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Mit key</div><div class="ref-field-val"><code>sorted(personen, key=lambda p: p["alter"], reverse=True)</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">sort() verändert die Liste direkt. sorted() ist sicherer, weil das Original erhalten bleibt.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Dictionary-Methoden</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">dict.get() / keys() / values() / items()</span><span class="ref-entry-badge">Dict</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">get</div><div class="ref-field-val"><code>d.get("key", default)</code> — Sicherer Zugriff ohne KeyError</div></div>
+      <div class="ref-field"><div class="ref-field-label">keys</div><div class="ref-field-val"><code>for k in d.keys()</code> — Über alle Schlüssel iterieren</div></div>
+      <div class="ref-field"><div class="ref-field-label">values</div><div class="ref-field-val"><code>for v in d.values()</code> — Über alle Werte iterieren</div></div>
+      <div class="ref-field"><div class="ref-field-label">items</div><div class="ref-field-val"><code>for k, v in d.items()</code> — Schlüssel und Wert gleichzeitig</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">d["key"] wirft KeyError wenn Schlüssel fehlt → d.get("key") bevorzugen</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Fehlerbehandlung</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">ValueError / TypeError / KeyError / IndexError</span><span class="ref-entry-badge">Exceptions</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field"><div class="ref-field-label">ValueError</div><div class="ref-field-val">Falscher Inhalt: <code>int("abc")</code>, <code>int("")</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">TypeError</div><div class="ref-field-val">Falscher Typ: <code>"text" + 5</code>, <code>len(42)</code></div></div>
+      <div class="ref-field"><div class="ref-field-label">KeyError</div><div class="ref-field-val">Schlüssel fehlt im Dict: <code>d["xyz"]</code> wenn xyz nicht existiert</div></div>
+      <div class="ref-field"><div class="ref-field-label">IndexError</div><div class="ref-field-val">Index zu groß: <code>lst[10]</code> bei 5-elementiger Liste</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">Spezifische Exceptions abfangen (except ValueError) statt alles (except Exception). Fehlermeldung gibt immer Hinweis auf Ursache.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Module & Bibliotheken</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">math — Mathematik</span><span class="ref-entry-badge">Modul</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Wichtige Funktionen</div><div class="ref-field-val"><code>math.sqrt(x)</code> · <code>math.ceil(x)</code> · <code>math.floor(x)</code> · <code>math.pi</code> · <code>math.pow(x,y)</code> · <code>math.abs(x)</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel</div><div class="ref-field-val"><code>import math; math.sqrt(25) # 5.0 | math.ceil(2.3) # 3</code></div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">random — Zufallszahlen</span><span class="ref-entry-badge">Modul</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Wichtige Funktionen</div><div class="ref-field-val"><code>random.randint(1,6)</code> · <code>random.choice(liste)</code> · <code>random.shuffle(liste)</code> · <code>random.random()</code> (0.0–1.0)</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">random ist pseudozufällig — für Kryptographie: secrets-Modul verwenden</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">os — Betriebssystem</span><span class="ref-entry-badge">Modul</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Wichtige Funktionen</div><div class="ref-field-val"><code>os.getcwd()</code> · <code>os.listdir()</code> · <code>os.path.exists(pfad)</code> · <code>os.path.join("a","b")</code> · <code>os.makedirs(pfad)</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">os.path.join() für plattformübergreifende Pfade verwenden — nie manuell "/" oder "\" eintippen</div></div>
+    </div>
+  </div>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">datetime — Datum & Zeit</span><span class="ref-entry-badge">Modul</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Syntax</div><div class="ref-field-val"><code>from datetime import datetime; now = datetime.now(); now.strftime("%d.%m.%Y %H:%M")</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">timedelta für Zeitdifferenzen. Zeitzonen mit pytz oder zoneinfo (Python 3.9+) handhaben.</div></div>
+    </div>
+  </div>
+
+  <h2 class="ch">Dateiverarbeitung</h2>
+
+  <div class="ref-entry">
+    <div class="ref-entry-head"><span class="ref-entry-name">with open() — Dateien</span><span class="ref-entry-badge">Datei</span></div>
+    <div class="ref-entry-body">
+      <div class="ref-field full"><div class="ref-field-label">Modi</div><div class="ref-field-val"><code>"r"</code> lesen · <code>"w"</code> schreiben (überschreibt!) · <code>"a"</code> anhängen · <code>"x"</code> neu erstellen (Fehler wenn existiert)</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel Lesen</div><div class="ref-field-val"><code>with open("datei.txt", "r", encoding="utf-8") as f: inhalt = f.read()</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Beispiel Schreiben</div><div class="ref-field-val"><code>with open("out.txt", "w", encoding="utf-8") as f: f.write("Hallo\n")</code></div></div>
+      <div class="ref-field full"><div class="ref-field-label">Fehlerquelle</div><div class="ref-field-val">"w" überschreibt ohne Warnung! Immer encoding="utf-8" angeben für Umlaute</div></div>
+      <div class="ref-field full"><div class="ref-field-label">Hinweis</div><div class="ref-field-val">with-Statement schließt die Datei automatisch — auch bei Fehlern. Immer with verwenden!</div></div>
+    </div>
+  </div>
+
+  <div class="box info"><div class="box-icon">🎉</div><div class="box-body"><div class="box-title">Kurs abgeschlossen!</div><div class="box-text">Du hast alle drei Module von CodeCraft abgeschlossen. Nutze die Referenz täglich als Nachschlagewerk. Der nächste Schritt: ein eigenes Projekt — eine Webseite oder ein Python-Skript, das eine echte Aufgabe löst.</div></div></div>
+
+  <div class="chapter-nav">
+    <button class="cnav-btn" onclick="navLesson(-1)"><div class="cnav-label">← Zurück</div><div class="cnav-title">HTML-Referenz</div></button>
+  </div>
+</article>
+
+  </div><!-- /lessons-wrap -->
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// COURSE DATA
+// ═══════════════════════════════════════════════════════
+const LESSONS = [
+  {id:'welcome', mod:'Start', title:'Willkommen', group:null},
+  {id:'m1-was', mod:'Modul 1', title:'Was ist Programmieren?', group:'Modul 1 — Grundlagen'},
+  {id:'m1-hardware', mod:'Modul 1', title:'Hardware-Anforderungen', group:'Modul 1 — Grundlagen'},
+  {id:'m1-windows', mod:'Modul 1', title:'Einrichtung unter Windows', group:'Modul 1 — Grundlagen'},
+  {id:'m1-macos', mod:'Modul 1', title:'Einrichtung unter macOS', group:'Modul 1 — Grundlagen'},
+  {id:'m1-erstes', mod:'Modul 1', title:'Erstes Programm schreiben', group:'Modul 1 — Grundlagen'},
+  {id:'m1-debug', mod:'Modul 1', title:'Debuggen & Fehler lösen', group:'Modul 1 — Grundlagen'},
+  {id:'m1-fehler', mod:'Modul 1', title:'Typische Anfängerfehler', group:'Modul 1 — Grundlagen'},
+  {id:'m2-aufbau', mod:'Modul 2', title:'Variablen & Datentypen', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-operatoren', mod:'Modul 2', title:'Operatoren', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-bedingungen', mod:'Modul 2', title:'Bedingungen (if/elif/else)', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-schleifen', mod:'Modul 2', title:'Schleifen (for/while)', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-funktionen', mod:'Modul 2', title:'Funktionen', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-klassen', mod:'Modul 2', title:'Klassen & OOP', group:'Modul 2 — Programmiersprachen'},
+  {id:'m2-fehlerbehandlung', mod:'Modul 2', title:'Fehlerbehandlung & Module', group:'Modul 2 — Programmiersprachen'},
+  {id:'m3-html-intro', mod:'Modul 3', title:'HTML-Referenz', group:'Modul 3 — Referenz'},
+  {id:'m3-python-intro', mod:'Modul 3', title:'Python-Referenz', group:'Modul 3 — Referenz'},
+];
+
+let currentIdx = 0;
+let done = JSON.parse(localStorage.getItem('cc_done') || '[]');
+
+// ═══════════════════════════════════════════════════════
+// BUILD SIDEBAR
+// ═══════════════════════════════════════════════════════
+function buildSidebar() {
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = '';
+  let lastGroup = null;
+  LESSONS.forEach((l, i) => {
+    if (l.group && l.group !== lastGroup) {
+      const lbl = document.createElement('div');
+      lbl.className = 'sb-mod-label';
+      lbl.textContent = l.group;
+      nav.appendChild(lbl);
+      lastGroup = l.group;
+    } else if (!l.group && i === 0) {
+      const lbl = document.createElement('div');
+      lbl.className = 'sb-mod-label';
+      lbl.textContent = 'Einstieg';
+      nav.appendChild(lbl);
+    }
+    const item = document.createElement('div');
+    item.className = 'sb-item' + (i === currentIdx ? ' active' : '') + (done.includes(l.id) ? ' done' : '');
+    item.dataset.idx = i;
+    item.innerHTML = `<span class="sb-num">${String(i).padStart(2,'0')}</span><span style="flex:1">${l.title}</span><span class="sb-check">✓</span>`;
+    item.onclick = () => goToIdx(i);
+    nav.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function goToIdx(idx) {
+  if (idx < 0 || idx >= LESSONS.length) return;
+  const prev = document.querySelector(`.lesson.active`);
+  if (prev) prev.classList.remove('active');
+  currentIdx = idx;
+  const l = LESSONS[idx];
+  const el = document.querySelector(`.lesson[data-id="${l.id}"]`);
+  if (el) { el.classList.add('active'); el.scrollIntoView ? window.scrollTo(0,0) : null; }
+  document.getElementById('bc-mod').textContent = l.mod;
+  document.getElementById('bc-lesson').textContent = l.title;
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = idx === LESSONS.length - 1;
+  buildSidebar();
+  updateProgress();
+  if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0,0);
+}
+
+function navLesson(dir) { goToIdx(currentIdx + dir); }
+function goLesson(id) { const i = LESSONS.findIndex(l => l.id === id); if (i >= 0) goToIdx(i); }
+
+function markDone() {
+  const id = LESSONS[currentIdx].id;
+  if (!done.includes(id)) { done.push(id); localStorage.setItem('cc_done', JSON.stringify(done)); }
+  buildSidebar();
+  updateProgress();
+  if (currentIdx < LESSONS.length - 1) setTimeout(() => navLesson(1), 300);
+}
+
+function updateProgress() {
+  const pct = Math.round((done.length / LESSONS.length) * 100);
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════════
+// CODE COPY
+// ═══════════════════════════════════════════════════════
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    const range = document.createRange();
+    range.selectNode(pre);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(() => btn.textContent = 'Kopieren', 2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════════════════
+function answerQuiz(qid, btn, correct) {
+  const container = document.getElementById(qid);
+  if (container.classList.contains('answered')) return;
+  container.classList.add('answered');
+  container.querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    container.querySelectorAll('.quiz-opt').forEach(b => {
+      if (b.onclick.toString().includes('true')) b.classList.add('correct');
+    });
+  }
+  const fb = document.getElementById(qid + '-feedback');
+  fb.style.display = 'block';
+  fb.textContent = correct ? '✓ Richtig! Gut gemacht.' : '✗ Nicht ganz. Die markierte Antwort ist korrekt.';
+  fb.style.background = correct ? 'rgba(0,200,150,0.1)' : 'rgba(255,87,34,0.1)';
+  fb.style.color = correct ? 'var(--mint)' : '#FF7B55';
+  const nx = document.getElementById(qid + '-next');
+  if (nx) nx.style.display = 'inline-block';
+}
+
+// ═══════════════════════════════════════════════════════
+// HERO CODE TABS (wenn auf Welcome-Seite gezeigt)
+// ═══════════════════════════════════════════════════════
+function switchTab(lang, el) {
+  document.querySelectorAll('.cw-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.code-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const tc = document.getElementById('code-' + lang);
+  if (tc) tc.classList.add('active');
+}
+
+// Mobile sidebar
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const sb = document.getElementById('sidebar');
+  if (window.innerWidth <= 820 && sb.classList.contains('open') && !sb.contains(e.target) && e.target.id !== 'hamburger') {
+    sb.classList.remove('open');
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+buildSidebar();
+updateProgress();
+</script>
+</body>
+</html>
